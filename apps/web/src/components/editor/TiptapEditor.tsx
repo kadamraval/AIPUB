@@ -36,7 +36,8 @@ import {
   List, ListOrdered, Quote, Code, AlignLeft, AlignCenter, AlignRight, AlignJustify,
   Link as LinkIcon, Image as ImageIcon, Table as TableIcon,
   Undo, Redo, Highlighter, Type, ListChecks,
-  Wand2, Sparkles, Minus, ChevronDown, LayoutGrid, Trash2, Plus
+  Wand2, Sparkles, Minus, ChevronDown, LayoutGrid, Trash2, Plus, Maximize2, Minimize2,
+  Rows, Columns, CheckSquare
 } from "lucide-react"
 
 // Setup lowlight for syntax highlighting
@@ -57,6 +58,20 @@ const GridColumn = Node.create({
   name: "gridColumn",
   content: "block+",
   isolating: true,
+  addAttributes() {
+    return {
+      flex: {
+        default: 1,
+        parseHTML: element => parseFloat(element.style.flexGrow || "1"),
+        renderHTML: attributes => {
+          const flexVal = attributes.flex || 1
+          return {
+            style: `flex: ${flexVal} 1 0% !important; width: 0 !important; min-width: 0 !important; padding: 1.25rem !important; border-radius: 0.875rem !important; border: 1.5px dashed var(--border) !important; background-color: var(--surface) !important; box-sizing: border-box !important;`
+          }
+        }
+      }
+    }
+  },
   parseHTML() {
     return [
       { tag: 'div[data-type="grid-column"]' }
@@ -67,8 +82,7 @@ const GridColumn = Node.create({
       "div",
       {
         ...HTMLAttributes,
-        "data-type": "grid-column",
-        style: "flex: 1 1 0% !important; width: 0 !important; min-width: 0 !important; padding: 1.25rem !important; border-radius: 0.875rem !important; border: 1.5px dashed var(--border) !important; background-color: var(--surface) !important; box-sizing: border-box !important;"
+        "data-type": "grid-column"
       },
       0
     ]
@@ -153,6 +167,12 @@ export function TiptapEditor({ content, onChange, onWordCountChange, onAiAction 
     colPos: number
   }>({ show: false, top: 0, left: 0, pos: 0, colPos: 0 })
 
+  const [tableMenu, setTableMenu] = useState<{
+    show: boolean
+    top: number
+    left: number
+  }>({ show: false, top: 0, left: 0 })
+
   const [headingOpen, setHeadingOpen] = useState(false)
   const [listOpen, setListOpen] = useState(false)
   const [alignOpen, setAlignOpen] = useState(false)
@@ -233,6 +253,32 @@ export function TiptapEditor({ content, onChange, onWordCountChange, onAiAction 
         }
       } else {
         setGridMenu(prev => ({ ...prev, show: false }))
+      }
+
+      // TABLE MENU LOGIC
+      if (editor.isActive("table")) {
+        let tablePos = -1
+        const $pos = editor.state.selection.$from
+        for (let d = $pos.depth; d > 0; d--) {
+          if ($pos.node(d).type.name === 'table') {
+            tablePos = $pos.before(d)
+            break
+          }
+        }
+        
+        if (tablePos !== -1) {
+          const dom = editor.view.nodeDOM(tablePos) as HTMLElement
+          if (dom && dom.getBoundingClientRect) {
+            const rect = dom.getBoundingClientRect()
+            setTableMenu({
+              show: true,
+              top: rect.top - 48,
+              left: rect.left + rect.width / 2
+            })
+          }
+        }
+      } else {
+        setTableMenu(prev => ({ ...prev, show: false }))
       }
 
       // TEXT BUBBLE LOGIC
@@ -618,7 +664,49 @@ export function TiptapEditor({ content, onChange, onWordCountChange, onAiAction 
           >
             <Plus className="size-4 text-primary" />
           </button>
+
           <div className="h-4 w-px bg-divider mx-0.5" />
+
+          {/* Decrease Column Width */}
+          <button
+            type="button"
+            onMouseDown={(e) => cmd(e, () => {
+              if (gridMenu.colPos > 0) {
+                const colNode = editor.state.doc.nodeAt(gridMenu.colPos)
+                if (colNode && colNode.type.name === 'gridColumn') {
+                  const currentFlex = colNode.attrs.flex || 1
+                  const newFlex = Math.max(0.5, Number((currentFlex - 0.5).toFixed(1)))
+                  editor.chain().focus().setNodeSelection(gridMenu.colPos).updateAttributes('gridColumn', { flex: newFlex }).run()
+                }
+              }
+            })}
+            className="px-2 py-1.5 rounded-lg text-xs font-extrabold hover:bg-surface-secondary transition-all"
+            title="Decrease Column Width"
+          >
+            <Minimize2 className="size-4 text-default-600" />
+          </button>
+
+          {/* Increase Column Width */}
+          <button
+            type="button"
+            onMouseDown={(e) => cmd(e, () => {
+              if (gridMenu.colPos > 0) {
+                const colNode = editor.state.doc.nodeAt(gridMenu.colPos)
+                if (colNode && colNode.type.name === 'gridColumn') {
+                  const currentFlex = colNode.attrs.flex || 1
+                  const newFlex = Math.min(3, Number((currentFlex + 0.5).toFixed(1)))
+                  editor.chain().focus().setNodeSelection(gridMenu.colPos).updateAttributes('gridColumn', { flex: newFlex }).run()
+                }
+              }
+            })}
+            className="px-2 py-1.5 rounded-lg text-xs font-extrabold hover:bg-surface-secondary transition-all"
+            title="Increase Column Width"
+          >
+            <Maximize2 className="size-4 text-default-600" />
+          </button>
+
+          <div className="h-4 w-px bg-divider mx-0.5" />
+
           <button
             type="button"
             onMouseDown={(e) => cmd(e, () => {
@@ -637,6 +725,89 @@ export function TiptapEditor({ content, onChange, onWordCountChange, onAiAction 
             title="Delete Focused Column / Grid"
           >
             <Trash2 className="size-4 text-danger" />
+          </button>
+        </div>
+      )}
+
+      {/* ════════════════════════════════════════════════════════════════
+          FLOATING ADVANCED TABLE MENU ON TABLE SELECTION
+          ════════════════════════════════════════════════════════════════ */}
+      {tableMenu.show && (
+        <div
+          style={{
+            position: "fixed",
+            top: `${tableMenu.top}px`,
+            left: `${tableMenu.left}px`,
+            transform: "translateX(-50%)",
+            zIndex: 9999
+          }}
+          onMouseDown={(e) => e.preventDefault()}
+          className="flex items-center gap-1 bg-surface border border-divider shadow-md rounded-xl p-1 animate-in fade-in zoom-in-95 duration-100 select-none"
+        >
+          {/* Add Row Below */}
+          <button
+            type="button"
+            onMouseDown={(e) => cmd(e, () => editor.chain().focus().addRowAfter().run())}
+            className="px-2 py-1.5 rounded-lg text-xs font-semibold hover:bg-surface-secondary flex items-center gap-1.5 transition-all text-default-700"
+            title="Add Row Below"
+          >
+            <Rows className="size-4 text-primary" /> +Row
+          </button>
+
+          {/* Add Column Right */}
+          <button
+            type="button"
+            onMouseDown={(e) => cmd(e, () => editor.chain().focus().addColumnAfter().run())}
+            className="px-2 py-1.5 rounded-lg text-xs font-semibold hover:bg-surface-secondary flex items-center gap-1.5 transition-all text-default-700"
+            title="Add Column Right"
+          >
+            <Columns className="size-4 text-primary" /> +Col
+          </button>
+
+          <div className="h-4 w-px bg-divider mx-0.5" />
+
+          {/* Delete Row */}
+          <button
+            type="button"
+            onMouseDown={(e) => cmd(e, () => editor.chain().focus().deleteRow().run())}
+            className="px-2 py-1.5 rounded-lg text-xs font-semibold hover:bg-surface-secondary transition-all text-default-600"
+            title="Delete Current Row"
+          >
+            -Row
+          </button>
+
+          {/* Delete Column */}
+          <button
+            type="button"
+            onMouseDown={(e) => cmd(e, () => editor.chain().focus().deleteColumn().run())}
+            className="px-2 py-1.5 rounded-lg text-xs font-semibold hover:bg-surface-secondary transition-all text-default-600"
+            title="Delete Current Column"
+          >
+            -Col
+          </button>
+
+          <div className="h-4 w-px bg-divider mx-0.5" />
+
+          {/* Toggle Header Row */}
+          <button
+            type="button"
+            onMouseDown={(e) => cmd(e, () => editor.chain().focus().toggleHeaderRow().run())}
+            className="px-2 py-1.5 rounded-lg text-xs font-semibold hover:bg-surface-secondary flex items-center gap-1 transition-all text-default-600"
+            title="Toggle Header Row"
+          >
+            <CheckSquare className="size-3.5" /> Header
+          </button>
+
+          <div className="h-4 w-px bg-divider mx-0.5" />
+
+          {/* Delete Whole Table */}
+          <button
+            type="button"
+            onMouseDown={(e) => cmd(e, () => editor.chain().focus().deleteTable().run())}
+            className="px-2 py-1.5 rounded-lg text-xs font-extrabold hover:bg-danger/10 text-danger transition-all"
+            title="Delete Entire Table"
+          >
+            <Trash2 className="size-4" />
           </button>
         </div>
       )}
