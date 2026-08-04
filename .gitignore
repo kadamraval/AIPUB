@@ -1,0 +1,32 @@
+# Dependencies
+node_modules
+.pnpm-store
+venv
+__pycache__
+*.pyc
+
+# Builds
+.next
+out
+dist
+build
+
+# Environment & Credentials
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# Logs & Database
+*.log
+postgres_data
+redis_data
+
+# IDEs
+.vscode
+.idea
+*.swp
+.DS_Store
+# heroui-agents-md
+.heroui-docs/
