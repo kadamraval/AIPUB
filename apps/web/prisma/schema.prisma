@@ -1,0 +1,256 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==========================================
+// 1. WEBSITES (websites table)
+// ==========================================
+model Website {
+  id                   String   @id @default(cuid())
+  websiteName          String
+  domain               String   @unique
+  description          String?
+  status               String   @default("Active") // Active, Paused, Maintenance
+  darkLogoUrl          String?
+  lightLogoUrl         String?
+  timezone             String   @default("UTC")
+  language             String   @default("English (US)")
+  country              String   @default("United States")
+  brandVoice           String   @default("Authoritative & Executive")
+  writingStyleRich     String?  @db.Text
+  targetAudiences      String[] // Array of tags
+  tone                 String   @default("Professional & Authoritative")
+  expertiseLevel       String   @default("Expert / Advanced")
+  brandGuidelines      String?  @db.Text
+  customInstructions   String?  @db.Text
+  selectedCms          String   @default("WordPress") // WordPress, Ghost, Webflow, Shopify, Strapi
+  cmsCredentials       Json     // Encrypted API key / tokens JSON
+  slugFormat           String   @default("/{{slug}}")
+  comments             String   @default("Disabled") // Enabled, Disabled, Approval Required
+  pingSearchEngines    Boolean  @default(true)
+  categories           String[]
+  topics               String[]
+  contentType          String   @default("Articles & Guides")
+  contentLength        String   @default("Medium (1200-2000 words)")
+  restrictedTopics     String?
+  includeKeywords      String?
+  excludeKeywords      String?
+  contentGuidelines    String?  @db.Text
+  selectedWorkflowId  String?
+  approvalMode         String   @default("Direct Auto-Publish")
+  notificationWorkflow String   @default("Slack Alert Channel")
+  seoPlugin            String   @default("Native Schema Engine")
+  metaTitleTemplate    String   @default("{{article_title}} | {{site_name}}")
+  metaDescTemplate     String   @default("{{excerpt}}")
+  robots               String   @default("index, follow")
+  canonicalUrl         String   @default("Self Referencing")
+  openGraph            Boolean  @default(true)
+  twitterCard          String   @default("summary_large_image")
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  articles             Article[]
+  @@map("websites")
+}
+
+// ==========================================
+// 2. ARTICLES (articles table)
+// ==========================================
+model Article {
+  id               String    @id @default(cuid())
+  title            String
+  slug             String
+  content          String    @db.Text
+  excerpt          String?   @db.Text
+  status           String    @default("Draft") // Draft, Review, Scheduled, Published, Failed
+  websiteId        String
+  website          Website   @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  category         String?
+  tags             String[]
+  featuredImageUrl String?
+  seoTitle         String?
+  seoDescription   String?
+  readingTimeMins  Int       @default(5)
+  wordCount        Int       @default(0)
+  publishedAt      DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@unique([websiteId, slug])
+  @@map("articles")
+}
+
+// ==========================================
+// 3. WORKFLOWS (workflows table)
+// ==========================================
+model Workflow {
+  id           String   @id @default(cuid())
+  name         String
+  description  String?
+  category     String   @default("SEO Newsroom")
+  status       String   @default("Active") // Active, Paused, Draft
+  nodesJson    Json     // Workflow Graph Canvas Nodes
+  edgesJson    Json     // Workflow Graph Canvas Edges
+  triggerType  String   @default("Schedule") // Schedule, Webhook, Manual
+  cronSchedule String?  // e.g. "0 */6 * * *"
+  totalRuns    Int      @default(0)
+  successRate  Float    @default(100.0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  executions   WorkflowExecution[]
+  @@map("workflows")
+}
+
+// ==========================================
+// 4. WORKFLOW EXECUTIONS (workflow_executions table)
+// ==========================================
+model WorkflowExecution {
+  id           String    @id @default(cuid())
+  workflowId   String
+  workflow     Workflow  @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  status       String    @default("Running") // Running, Completed, Failed
+  durationMs   Int       @default(0)
+  logsJson     Json?
+  outputJson   Json?
+  errorDetails String?   @db.Text
+  startedAt    DateTime  @default(now())
+  completedAt  DateTime?
+
+  @@map("workflow_executions")
+}
+
+// ==========================================
+// 5. AGENTS (agents table)
+// ==========================================
+model Agent {
+  id           String   @id @default(cuid())
+  name         String
+  role         String
+  description  String?
+  provider     String   @default("Google Gemini") // Google Gemini, OpenAI, Anthropic
+  model        String   @default("gemini-2.5-flash")
+  temperature  Float    @default(0.7)
+  maxTokens    Int      @default(4096)
+  systemPrompt String   @db.Text
+  enabledTools String[] // e.g. ["web_search", "python_runner", "pubchem"]
+  status       String   @default("Active")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  executions   AgentExecution[]
+  @@map("agents")
+}
+
+// ==========================================
+// 6. AGENT EXECUTIONS (agent_executions table)
+// ==========================================
+model AgentExecution {
+  id              String   @id @default(cuid())
+  agentId         String
+  agent           Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  promptInput     String   @db.Text
+  outputResponse  String   @db.Text
+  tokensUsed      Int      @default(0)
+  executionTimeMs Int      @default(0)
+  status          String   @default("Completed")
+  createdAt       DateTime @default(now())
+
+  @@map("agent_executions")
+}
+
+// ==========================================
+// 7. SOURCES (sources table)
+// ==========================================
+model Source {
+  id            String    @id @default(cuid())
+  name          String
+  type          String    @default("RSS Feed") // RSS Feed, Web Scraper, API Endpoint, Media Ingestion
+  url           String
+  fetchInterval String    @default("15 mins")
+  status        String    @default("Active") // Active, Paused, Error
+  itemsIngested Int       @default(0)
+  lastFetchedAt DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@map("sources")
+}
+
+// ==========================================
+// 8. MEDIA FILES (media_files table)
+// ==========================================
+model MediaFile {
+  id         String   @id @default(cuid())
+  name       String
+  url        String
+  fileType   String   @default("image/png") // image, video, document
+  sizeBytes  Int      @default(0)
+  folderPath String   @default("/global")
+  dimensions String?  // e.g. "1920x1080"
+  altText    String?
+  createdAt  DateTime @default(now())
+
+  @@map("media_files")
+}
+
+// ==========================================
+// 9. NOTIFICATION SUBSCRIPTIONS (notification_subscriptions table)
+// ==========================================
+model NotificationSubscription {
+  id             String            @id @default(cuid())
+  name           String
+  description    String?
+  events         String[]          // e.g. ["Workflow Completed", "Website Failed"]
+  providers      String[]          // e.g. ["Slack", "Discord", "Email (Resend)"]
+  recipientsJson Json              // Map: { "Slack": "#publishing-alerts", "Discord": "https://..." }
+  template       String            @default("Workflow Completion Alert")
+  conditions     String?           // Compiled condition expression string
+  status         String            @default("Active") // Active, Disabled
+  lastTriggered  DateTime?
+  totalDelivered Int               @default(0)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  logs           NotificationLog[]
+  @@map("notification_subscriptions")
+}
+
+// ==========================================
+// 10. NOTIFICATION LOGS (notification_logs table)
+// ==========================================
+model NotificationLog {
+  id              String                    @id @default(cuid())
+  subscriptionId  String?
+  subscription    NotificationSubscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+  event           String
+  provider        String
+  recipient       String
+  status          String                    @default("Delivered") // Delivered, Failed
+  responsePayload String?                   @db.Text
+  deliveredAt     DateTime                  @default(now())
+
+  @@map("notification_logs")
+}
+
+// ==========================================
+// 11. INTEGRATIONS (integrations table)
+// ==========================================
+model Integration {
+  id           String    @id @default(cuid())
+  serviceName  String    @unique // Resend, Slack, FalAI, OpenAI, WordPress, Ghost
+  category     String    @default("Provider")
+  apiKey       String?   // Encrypted API Key
+  apiEndpoint  String?
+  status       String    @default("Connected") // Connected, Disconnected, Error
+  lastSyncedAt DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@map("integrations")
+}
