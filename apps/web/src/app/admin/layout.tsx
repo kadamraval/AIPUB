@@ -2,6 +2,7 @@ import React from "react"
 import { Sidebar } from "@/components/layout/sidebar"
 import { Header } from "@/components/layout/header"
 import { ClientOnly } from "@/components/shared/client-only"
+import { SearchModal } from "@/components/shared/search-modal"
 
 export const dynamic = "force-dynamic"
 
@@ -18,6 +19,7 @@ export default function AdminLayout({
         <main className="flex-1 p-6 overflow-y-auto">
           <ClientOnly>
             {children}
+            <SearchModal />
           </ClientOnly>
         </main>
       </div>

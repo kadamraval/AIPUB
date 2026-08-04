@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import {
@@ -19,7 +19,9 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
-  User
+  User,
+  Sun,
+  Moon
 } from "lucide-react"
 import {
   Dropdown,
@@ -38,7 +40,6 @@ const navigationGroup1 = [
 
 const navigationGroup2 = [
   { name: "Articles", href: "/admin/articles", icon: FileText },
-  { name: "Keyword", href: "/admin/keywords", icon: Search },
   { name: "Media", href: "/admin/media", icon: ImageIcon },
 ]
 
@@ -52,6 +53,30 @@ export function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
   const [isCollapsed, setIsCollapsed] = useState(false)
+  const [theme, setTheme] = useState<"light" | "dark">("light")
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault()
+        window.dispatchEvent(new CustomEvent("open-search-modal"))
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [])
+
+  const toggleTheme = () => {
+    const nextTheme = theme === "light" ? "dark" : "light"
+    setTheme(nextTheme)
+    if (nextTheme === "dark") {
+      document.documentElement.classList.add("dark")
+      document.documentElement.classList.remove("light")
+    } else {
+      document.documentElement.classList.add("light")
+      document.documentElement.classList.remove("dark")
+    }
+  }
 
   const handleLogout = () => {
     router.push("/login")
@@ -117,10 +142,11 @@ export function Sidebar() {
         </button>
       </div>
 
-      {/* Search above Dashboard */}
-      <div className="p-2 border-b border-divider">
+      {/* Search & Theme Toggle above Dashboard */}
+      <div className="p-2 border-b border-divider flex items-center gap-1.5">
         <button
-          className={`w-full flex items-center justify-between gap-2 px-3 py-1.5 rounded-medium border border-divider bg-background text-default-400 text-xs hover:text-foreground hover:bg-default-100 transition-colors ${
+          onClick={() => window.dispatchEvent(new CustomEvent("open-search-modal"))}
+          className={`flex-1 flex items-center justify-between gap-2 px-3 py-1.5 rounded-medium border border-divider bg-background text-default-400 text-xs hover:text-foreground hover:bg-default-100 transition-colors ${
             isCollapsed ? "justify-center px-0" : ""
           }`}
           title="Search (Ctrl+K)"
@@ -134,6 +160,15 @@ export function Sidebar() {
               ⌘K
             </kbd>
           )}
+        </button>
+
+        <button
+          type="button"
+          onClick={toggleTheme}
+          className="h-8 w-8 rounded-medium border border-divider flex items-center justify-center text-default-500 hover:text-foreground hover:bg-default-100 transition-colors shrink-0"
+          title={`Switch to ${theme === "light" ? "Dark" : "Light"} mode`}
+        >
+          {theme === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
         </button>
       </div>
 

@@ -41,6 +41,17 @@ export default function ArticlesPage() {
       if (data && data.length > 0) setArticles(data)
     }
     loadArticles()
+
+    const handleFilter = (e: any) => setStatusFilter(e.detail || "all")
+    const handleView = (e: any) => setDisplayMode(e.detail === "grid" ? "grid" : "table")
+
+    window.addEventListener("header-filter-change", handleFilter)
+    window.addEventListener("header-view-change", handleView)
+
+    return () => {
+      window.removeEventListener("header-filter-change", handleFilter)
+      window.removeEventListener("header-view-change", handleView)
+    }
   }, [])
 
   const filteredArticles = articles.filter((art) => {
@@ -67,21 +78,6 @@ export default function ArticlesPage() {
 
   return (
     <div className="space-y-6">
-      {/* Page Title & Action */}
-      <PageHeader
-        title="Articles Directory"
-        description="Manage, edit, publish, and audit AI-generated content across all connected websites."
-        action={
-          <Button
-            variant="primary"
-            className="font-bold text-xs gap-1.5 shadow-xs"
-            onPress={() => router.push("/admin/articles/new")}
-          >
-            <Plus className="size-4" /> Create New Article
-          </Button>
-        }
-      />
-
       {/* Summary Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <DataCard
@@ -118,38 +114,7 @@ export default function ArticlesPage() {
 
 
 
-      {/* Toolbar with Grid/Table Mode Switch */}
-      <Toolbar
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        searchPlaceholder="Search articles by title or site name..."
-        displayMode={displayMode}
-        onDisplayModeChange={(mode) => setDisplayMode(mode as "table" | "grid")}
-        selectedCount={selectedIds.size}
-        filters={
-          <Select
-            selectedKey={statusFilter}
-            onSelectionChange={(key) => {
-              if (key) { setStatusFilter(key as string); setCurrentPage(1); }
-            }}
-            className="w-36"
-            aria-label="Filter by status"
-          >
-            <Select.Trigger>
-              <Select.Value />
-              <Select.Indicator />
-            </Select.Trigger>
-            <Select.Popover>
-              <ListBox>
-                <ListBox.Item id="all">All Statuses</ListBox.Item>
-                <ListBox.Item id="published">Published</ListBox.Item>
-                <ListBox.Item id="draft">Draft</ListBox.Item>
-                <ListBox.Item id="review">In Review</ListBox.Item>
-              </ListBox>
-            </Select.Popover>
-          </Select>
-        }
-      />
+
 
       {/* Articles View Modes */}
       {displayMode === "grid" ? (

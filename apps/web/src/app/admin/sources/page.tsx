@@ -12,8 +12,9 @@ import {
 } from "@heroui/react"
 import {
   RefreshCw, Trash2, CheckCircle2, Download,
-  ChevronLeft, ChevronRight,
+  ChevronLeft, ChevronRight, Rss, Clock, AlertCircle, Activity
 } from "lucide-react"
+import { DataCard } from "@/components/shared/data-card"
 import { fetchSources, triggerFetchSource, deleteSource, fetchWebsites } from "@/lib/api"
 
 const defaultDemoSources = [
@@ -44,8 +45,13 @@ export default function SourcesPage() {
     }
     loadData()
     const handleOpenModal = () => router.push("/admin/sources/new")
+    const handleFilter = (e: any) => setTypeFilter(e.detail || "all")
     window.addEventListener("open-admin-modal", handleOpenModal)
-    return () => { window.removeEventListener("open-admin-modal", handleOpenModal) }
+    window.addEventListener("header-filter-change", handleFilter)
+    return () => {
+      window.removeEventListener("open-admin-modal", handleOpenModal)
+      window.removeEventListener("header-filter-change", handleFilter)
+    }
   }, [router])
 
   const handleAutoFetch = async (id: string, sourceName: string) => {
@@ -119,8 +125,23 @@ export default function SourcesPage() {
     setSelectedIds(next)
   }
 
+  // Summary Stats
+  const totalSources = sources.length
+  const activeCount = sources.filter(s => s.status === "active").length
+  const rssCount = sources.filter(s => s.source_type?.includes("RSS")).length
+  const totalItems = sources.reduce((acc, s) => acc + (s.total_fetched_items || 0), 0)
+
   return (
     <div className="space-y-6">
+      {/* 5-Card Metric Summary */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <DataCard title="Total Sources" value={totalSources.toString()} caption="Configured data feeds" icon={Rss} />
+        <DataCard title="Active Streams" value={activeCount.toString()} caption="Syncing automatically" icon={CheckCircle2} />
+        <DataCard title="RSS Feeds" value={rssCount.toString()} caption="Standard syndication" icon={Clock} />
+        <DataCard title="API Streams" value={(totalSources - rssCount).toString()} caption="Custom webhooks & APIs" icon={Activity} />
+        <DataCard title="Items Fetched" value={totalItems.toString()} caption="Total intake volume" icon={RefreshCw} />
+      </div>
+
       {msg && (
         <div className="p-3 bg-success-50 border border-success-200 text-success-700 text-xs rounded-large flex items-center gap-2">
           <CheckCircle2 className="h-4 w-4" />
@@ -128,70 +149,7 @@ export default function SourcesPage() {
         </div>
       )}
 
-      <Toolbar
-        searchQuery={searchQuery}
-        onSearchChange={(val) => { setSearchQuery(val); setCurrentPage(1) }}
-        searchPlaceholder="Search by source name, stream URL, or target property..."
-        actions={
-          <>
-            {selectedIds.size > 0 && (
-              <Button size="sm" onPress={handleBulkDelete}><Trash2 className="size-4" /> 
-                Delete ({selectedIds.size})
-              </Button>
-            )}
-            <Button variant="ghost" size="sm" onPress={handleExportCSV}><Download className="size-4" /> 
-              Export CSV
-            </Button>
-          </>
-        }
-        filters={
-          <>
-            <Select
-              selectedKey={typeFilter}
-              onSelectionChange={(key) => {
-                if (key) { setTypeFilter(key as string); setCurrentPage(1); }
-              }}
-              className="w-44"
-              aria-label="Filter by source type"
-            >
-              <Select.Trigger>
-                <Select.Value />
-                <Select.Indicator />
-              </Select.Trigger>
-              <Select.Popover>
-                <ListBox>
-                  <ListBox.Item id="all">All Source Types</ListBox.Item>
-                  <ListBox.Item id="RSS Feed">RSS Feed</ListBox.Item>
-                  <ListBox.Item id="Google News Stream">Google News Stream</ListBox.Item>
-                  <ListBox.Item id="API Stream">API Stream</ListBox.Item>
-                </ListBox>
-              </Select.Popover>
-            </Select>
 
-            <Select
-              selectedKey={siteFilter}
-              onSelectionChange={(key) => {
-                if (key) { setSiteFilter(key as string); setCurrentPage(1); }
-              }}
-              className="w-48"
-              aria-label="Filter by target property"
-            >
-              <Select.Trigger>
-                <Select.Value />
-                <Select.Indicator />
-              </Select.Trigger>
-              <Select.Popover>
-                <ListBox>
-                  <ListBox.Item id="all">All Target Properties</ListBox.Item>
-                  <ListBox.Item id="TechPulse Daily">TechPulse Daily</ListBox.Item>
-                  <ListBox.Item id="AI Frontier Journal">AI Frontier Journal</ListBox.Item>
-                  <ListBox.Item id="SaaS Growth Chronicle">SaaS Growth Chronicle</ListBox.Item>
-                </ListBox>
-              </Select.Popover>
-            </Select>
-          </>
-        }
-      />
 
       
       <div className="space-y-3">

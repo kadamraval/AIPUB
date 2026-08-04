@@ -13,8 +13,9 @@ import {
 } from "@heroui/react"
 import {
   Bot, Edit, Trash2, CheckCircle2, Sparkles, ArrowUpDown, Download,
-  ChevronLeft, ChevronRight, LayoutGrid, List
+  ChevronLeft, ChevronRight, LayoutGrid, List, Zap, Cpu, ShieldCheck
 } from "lucide-react"
+import { DataCard } from "@/components/shared/data-card"
 import { fetchCustomAgents, deleteCustomAgent } from "@/lib/api"
 
 const defaultDemoAgents = [
@@ -104,20 +105,26 @@ export default function CustomAgentsStudioPage() {
 
   const openCreateModalRef = useRef(openCreateModal)
   useEffect(() => { openCreateModalRef.current = openCreateModal })
-
   useEffect(() => {
     async function loadAgents() {
       const data = await fetchCustomAgents()
       if (data && data.length > 0) setAgents(data)
     }
     loadAgents()
+    const handleOpenModal = () => { router.push("/admin/custom-agents/new") }
+    const handleFilter = (e: any) => setStatusFilter(e.detail || "all")
+    const handleView = (e: any) => setDisplayMode(e.detail === "grid" ? "grid" : "table")
 
-    const handleOpenModal = () => openCreateModalRef.current()
     window.addEventListener("open-admin-modal", handleOpenModal)
+    window.addEventListener("header-filter-change", handleFilter)
+    window.addEventListener("header-view-change", handleView)
+
     return () => {
       window.removeEventListener("open-admin-modal", handleOpenModal)
+      window.removeEventListener("header-filter-change", handleFilter)
+      window.removeEventListener("header-view-change", handleView)
     }
-  }, [])
+  }, [router])
 
   const handleDelete = async (id: string, name: string) => {
     if (!confirm(`Are you sure you want to delete AI Agent "${name}"?`)) return
@@ -199,8 +206,22 @@ export default function CustomAgentsStudioPage() {
     setSelectedIds(next)
   }
 
+  // Summary Stats
+  const totalAgents = agents.length
+  const activeAgents = agents.filter(a => a.is_active !== false).length
+  const customAgentsCount = agents.filter(a => a.skills && a.skills.length > 0).length
+
   return (
     <div className="space-y-6">
+      {/* 5-Card Metric Summary */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <DataCard title="Total Agents" value={totalAgents.toString()} caption="Configured AI personas" icon={Bot} />
+        <DataCard title="Active Agents" value={activeAgents.toString()} caption="Ready for execution" icon={CheckCircle2} />
+        <DataCard title="Custom Skills" value={customAgentsCount.toString()} caption="Trained agent capabilities" icon={Sparkles} />
+        <DataCard title="Model Engine" value="GPT-4o" caption="Default LLM engine" icon={Cpu} />
+        <DataCard title="Execution Velocity" value="100%" caption="System reliability" icon={ShieldCheck} />
+      </div>
+
       {msg && (
         <div className="p-3 bg-success-50 border border-success-200 text-success-700 text-xs rounded-large flex items-center gap-2">
           <CheckCircle2 className="size-4" />
@@ -208,68 +229,6 @@ export default function CustomAgentsStudioPage() {
         </div>
       )}
 
-      <Toolbar
-        searchQuery={searchQuery}
-        onSearchChange={(val) => {
-          setSearchQuery(val)
-          setCurrentPage(1)
-        }}
-        searchPlaceholder="Search agents by name, role description, or system prompt..."
-        actions={
-          <>
-            <div className="flex items-center border border-divider rounded-medium p-0.5 bg-content1 mr-1">
-              <Button
-                variant={displayMode === "table" ? "secondary" : "ghost"}
-                size="sm"
-                isIconOnly
-                onPress={() => setDisplayMode("table")}
-              >
-                <List className="size-4" />
-              </Button>
-              <Button
-                variant={displayMode === "grid" ? "secondary" : "ghost"}
-                size="sm"
-                isIconOnly
-                onPress={() => setDisplayMode("grid")}
-              >
-                <LayoutGrid className="size-4" />
-              </Button>
-            </div>
-
-            {selectedIds.size > 0 && (
-              <Button size="sm" onPress={handleBulkDelete}><Trash2 className="size-4"  /> 
-                Delete ({selectedIds.size})
-              </Button>
-            )}
-
-            <Button variant="outline" size="sm" onPress={handleExportCSV}><Download className="size-4"  /> 
-              Export CSV
-            </Button>
-          </>
-        }
-        filters={
-          <Select
-            selectedKey={statusFilter}
-            onSelectionChange={(key) => {
-              if (key) { setStatusFilter(key as string); setCurrentPage(1); }
-            }}
-            className="w-36"
-            aria-label="Filter by status"
-          >
-            <Select.Trigger>
-              <Select.Value />
-              <Select.Indicator />
-            </Select.Trigger>
-            <Select.Popover>
-              <ListBox>
-                <ListBox.Item id="all">All Statuses</ListBox.Item>
-                <ListBox.Item id="active">Active</ListBox.Item>
-                <ListBox.Item id="paused">Paused</ListBox.Item>
-              </ListBox>
-            </Select.Popover>
-          </Select>
-        }
-      />
 
       {/* MODE 1: TABLE VIEW */}
       {displayMode === "table" && (

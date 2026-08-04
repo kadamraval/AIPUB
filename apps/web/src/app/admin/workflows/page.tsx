@@ -32,6 +32,7 @@ import {
 import { Toolbar } from "@/components/shared/toolbar"
 import { TableRowActions } from "@/components/shared/table-row-actions"
 import { TablePagination } from "@/components/shared/table-pagination"
+import { DataCard } from "@/components/shared/data-card"
 import { fetchWorkflows, deleteWorkflow, updateWorkflow, fetchCustomAgents } from "@/lib/api"
 
 // Dynamic SSR rule for admin page
@@ -539,6 +540,13 @@ export default function WorkflowsModulePage() {
     )
   }
 
+  // Event Listeners for Header Controls
+  useEffect(() => {
+    const handleFilter = (e: any) => setStatusFilter(e.detail || "all")
+    window.addEventListener("header-filter-change", handleFilter)
+    return () => window.removeEventListener("header-filter-change", handleFilter)
+  }, [])
+
   // Table Filtering
   const filteredWorkflows = workflows.filter((wf) => {
     const matchesSearch = wf.name.toLowerCase().includes(searchQuery.toLowerCase()) || (wf.description && wf.description.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -569,42 +577,14 @@ export default function WorkflowsModulePage() {
       {/* ══════════════════════════════════════════════════════════════════════ */}
       {viewMode === "list" && (
         <div className="space-y-6">
-          <Toolbar
-            searchQuery={searchQuery}
-            onSearchChange={(val) => { setSearchQuery(val); setCurrentPage(1); }}
-            searchPlaceholder="Search workflows by name, description or tags..."
-            actions={
-              selectedIds.size > 0 ? (
-                <Button size="sm" onPress={() => { setWorkflows((prev) => prev.filter((w) => !selectedIds.has(w.id))); setSelectedIds(new Set()); }} className="bg-danger-500 text-white font-bold">
-                  <Trash2 className="size-4" /> Delete ({selectedIds.size})
-                </Button>
-              ) : null
-            }
-            filters={
-              <div className="flex items-center gap-2">
-                <Select selectedKey={websiteFilter} onSelectionChange={(key) => key && setWebsiteFilter(key as string)} className="w-44" aria-label="Website Filter">
-                  <Select.Trigger><Select.Value /><Select.Indicator /></Select.Trigger>
-                  <Select.Popover>
-                    <ListBox>
-                      <ListBox.Item id="all">All Websites</ListBox.Item>
-                      {DEMO_WEBSITES.map((site) => (<ListBox.Item key={site} id={site}>{site}</ListBox.Item>))}
-                    </ListBox>
-                  </Select.Popover>
-                </Select>
-
-                <Select selectedKey={statusFilter} onSelectionChange={(key) => key && setStatusFilter(key as string)} className="w-36" aria-label="Status Filter">
-                  <Select.Trigger><Select.Value /><Select.Indicator /></Select.Trigger>
-                  <Select.Popover>
-                    <ListBox>
-                      <ListBox.Item id="all">All Statuses</ListBox.Item>
-                      <ListBox.Item id="Published">Published</ListBox.Item>
-                      <ListBox.Item id="Draft">Draft</ListBox.Item>
-                    </ListBox>
-                  </Select.Popover>
-                </Select>
-              </div>
-            }
-          />
+          {/* 5-Card Metric Summary */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <DataCard title="Total Workflows" value={workflows.length.toString()} caption="Configured pipelines" icon={GitBranch} />
+            <DataCard title="Active Blueprints" value={workflows.filter(w => (w.status || "Draft") === "Published").length.toString()} caption="Running in production" icon={CheckCircle2} />
+            <DataCard title="Drafts" value={workflows.filter(w => (w.status || "Draft") === "Draft").length.toString()} caption="In development" icon={Edit} />
+            <DataCard title="Execution Rate" value="99.4%" caption="Successful node runs" icon={Zap} />
+            <DataCard title="Scheduled Tasks" value="24/7" caption="Automated cadence" icon={Clock} />
+          </div>
 
           <div className="space-y-3">
             <Table>

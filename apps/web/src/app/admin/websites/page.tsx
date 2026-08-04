@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/shared/page-header"
 import { Toolbar } from "@/components/shared/toolbar"
 import { TableRowActions } from "@/components/shared/table-row-actions"
 import { TablePagination } from "@/components/shared/table-pagination"
+import { DataCard } from "@/components/shared/data-card"
 
 import {
   Card,
@@ -104,8 +105,18 @@ export default function WebsitesPage() {
   useEffect(() => {
     loadData()
     const handleOpenModal = () => { router.push("/admin/websites/new") }
+    const handleFilter = (e: any) => setStatusFilter(e.detail || "all")
+    const handleView = (e: any) => setDisplayMode(e.detail === "grid" ? "grid" : "table")
+
     window.addEventListener("open-admin-modal", handleOpenModal)
-    return () => window.removeEventListener("open-admin-modal", handleOpenModal)
+    window.addEventListener("header-filter-change", handleFilter)
+    window.addEventListener("header-view-change", handleView)
+
+    return () => {
+      window.removeEventListener("open-admin-modal", handleOpenModal)
+      window.removeEventListener("header-filter-change", handleFilter)
+      window.removeEventListener("header-view-change", handleView)
+    }
   }, [router])
 
   const handleToggleStatus = async (id: string) => {
@@ -146,8 +157,23 @@ export default function WebsitesPage() {
   const totalPages = Math.ceil(filteredAndSortedWebsites.length / pageSize) || 1
   const paginatedWebsites = filteredAndSortedWebsites.slice((currentPage - 1) * pageSize, currentPage * pageSize)
 
+  // Summary Stats
+  const totalSites = websites.length
+  const activeSites = websites.filter(w => w.status === "active").length
+  const wordpressSites = websites.filter(w => w.cms_type?.toLowerCase().includes("wordpress")).length
+  const totalPublishedArticles = websites.reduce((acc, w) => acc + (w.articles || 0), 0)
+
   return (
     <div className="space-y-6">
+      {/* 5-Card Metric Summary */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <DataCard title="Total Properties" value={totalSites.toString()} caption="Target web properties" icon={Globe} />
+        <DataCard title="Active CMS Sync" value={activeSites.toString()} caption="Automated publishing" icon={CheckCircle2} />
+        <DataCard title="WordPress Sites" value={wordpressSites.toString()} caption="Connected via REST API" icon={Layers} />
+        <DataCard title="Other CMS" value={(totalSites - wordpressSites).toString()} caption="Ghost, Webflow, Custom" icon={Sparkles} />
+        <DataCard title="Total Articles" value={totalPublishedArticles.toString()} caption="Published across network" icon={FileText} />
+      </div>
+
       {msg && (
         <div className="p-3 bg-success-50 border border-success-200 text-success-700 text-xs rounded-large flex items-center gap-2">
           <CheckCircle2 className="size-4" />
@@ -155,68 +181,7 @@ export default function WebsitesPage() {
         </div>
       )}
 
-      <Toolbar
-        searchQuery={searchQuery}
-        onSearchChange={(val) => { setSearchQuery(val); setCurrentPage(1) }}
-        searchPlaceholder="Search by property name, domain, or CMS..."
-        displayMode={displayMode}
-        onDisplayModeChange={(mode) => setDisplayMode(mode as "table" | "grid")}
-        actions={
-          selectedIds.size > 0 ? (
-            <Button size="sm" onPress={handleBulkDelete}>
-              <Trash2 className="size-4" /> Delete ({selectedIds.size})
-            </Button>
-          ) : undefined
-        }
-        filters={
-          <>
-            <Select
-              selectedKey={statusFilter}
-              onSelectionChange={(key) => {
-                if (key) { setStatusFilter(key as string); setCurrentPage(1); }
-              }}
-              className="w-36"
-              aria-label="Filter by status"
-            >
-              <Select.Trigger>
-                <Select.Value />
-                <Select.Indicator />
-              </Select.Trigger>
-              <Select.Popover>
-                <ListBox>
-                  <ListBox.Item id="all">All Statuses</ListBox.Item>
-                  <ListBox.Item id="active">Active</ListBox.Item>
-                  <ListBox.Item id="stopped">Stopped</ListBox.Item>
-                </ListBox>
-              </Select.Popover>
-            </Select>
 
-            <Select
-              selectedKey={cmsFilter}
-              onSelectionChange={(key) => {
-                if (key) { setCmsFilter(key as string); setCurrentPage(1); }
-              }}
-              className="w-40"
-              aria-label="Filter by CMS"
-            >
-              <Select.Trigger>
-                <Select.Value />
-                <Select.Indicator />
-              </Select.Trigger>
-              <Select.Popover>
-                <ListBox>
-                  <ListBox.Item id="all">All CMS Types</ListBox.Item>
-                  <ListBox.Item id="WordPress">WordPress</ListBox.Item>
-                  <ListBox.Item id="Shopify">Shopify</ListBox.Item>
-                  <ListBox.Item id="Ghost">Ghost</ListBox.Item>
-                  <ListBox.Item id="Webflow">Webflow</ListBox.Item>
-                  <ListBox.Item id="Strapi">Strapi</ListBox.Item>
-                </ListBox>
-              </Select.Popover>
-            </Select>
-          </>
-        }
-      />
 
       {displayMode === "grid" ? (
         /* GRID SYSTEM VIEW */
