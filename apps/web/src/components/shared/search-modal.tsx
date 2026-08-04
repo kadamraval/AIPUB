@@ -17,7 +17,7 @@ export function SearchModal() {
   useEffect(() => {
     const handleOpen = () => setIsOpen(true)
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+      if ((e.metaKey || e.ctrlKey) && (e.key === "k" || e.key === "K" || e.code === "KeyK" || e.keyCode === 75)) {
         e.preventDefault()
         setIsOpen((prev) => !prev)
       }
