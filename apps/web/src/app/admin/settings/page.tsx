@@ -2,11 +2,11 @@
 
 import React, { useState } from "react"
 import {
-  Button, Form, TextField, Label, Input, Select, ListBox, Tooltip, Accordion, Switch
+  Button, Form, TextField, Label, Input, Select, ListBox, Tooltip, Accordion, Switch, Chip
 } from "@heroui/react"
 import {
   Save, Settings, Brain, Search, Database, Shield, Key, CheckCircle2, Info, ChevronDown,
-  Puzzle, User, Bell, Lock, Globe, HardDrive, Cpu
+  Puzzle, User, Bell, Lock, Globe, HardDrive, Cpu, Copy
 } from "lucide-react"
 
 const TIMEZONES = ["UTC", "America/New_York", "America/Los_Angeles", "Europe/London", "Asia/Tokyo", "Europe/Paris"]
@@ -96,6 +96,32 @@ export default function SettingsPage() {
   const [sessionTimeout, setSessionTimeout] = useState("60")
   const [notifyOnFailure, setNotifyOnFailure] = useState(true)
   const [slackWebhook, setSlackWebhook] = useState("https://hooks.slack.com/services/T00/B00/XXXX")
+
+  // Multiple Webhooks List State
+  const [webhooksList, setWebhooksList] = useState([
+    { id: "wh-1", name: "Zapier Social Auto-Post", url: "https://hooks.zapier.com/v1/aipub", type: "Outbound", events: "Article.Published", secret: "whsec_zapier123", status: "Active" },
+    { id: "wh-2", name: "n8n Workflow Trigger", url: "https://n8n.internal/webhook/trigger", type: "Inbound", events: "Workflow.Started", secret: "whsec_n8n456", status: "Active" },
+    { id: "wh-3", name: "Production Analytics", url: "https://api.aipub.io/v1/events", type: "Outbound", events: "All Events", secret: "whsec_analytics789", status: "Active" }
+  ])
+
+  // AIPUB REST API Keys Manager State
+  const [apiKeysList, setApiKeysList] = useState([
+    { id: "key-1", name: "Default Production API Key", key: "aipub_sk_live_987654321qwerty", scope: "Full Access", status: "Active", createdAt: "2026-08-01" },
+    { id: "key-2", name: "Zapier Integration Key", key: "aipub_sk_live_123456789zapier", scope: "Publishing Only", status: "Active", createdAt: "2026-08-03" }
+  ])
+
+  // API Key Creation Form State
+  const [showApiKeyForm, setShowApiKeyForm] = useState(false)
+  const [newKeyName, setNewKeyName] = useState("")
+  const [newKeyScope, setNewKeyScope] = useState("Full Access")
+
+  // Webhook Creation Form State
+  const [showWebhookForm, setShowWebhookForm] = useState(false)
+  const [newWhName, setNewWhName] = useState("")
+  const [newWhType, setNewWhType] = useState("Outbound")
+  const [newWhUrl, setNewWhUrl] = useState("")
+  const [newWhEvents, setNewWhEvents] = useState("Article.Published")
+  const [newWhSecret, setNewWhSecret] = useState("")
 
   const handleSave = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -719,6 +745,451 @@ export default function SettingsPage() {
                       className="w-full h-10 px-3.5 text-xs bg-default-100/80 dark:bg-default-50/40 text-foreground border border-divider rounded-xl focus:bg-white focus:border-primary focus:outline-none transition-colors"
                     />
                   </TextField>
+                </div>
+              </Accordion.Body>
+            </Accordion.Panel>
+          </Accordion.Item>
+
+          {/* Section 8: Developer Settings */}
+          <Accordion.Item key="mcp-developer" className="border border-divider rounded-2xl bg-white dark:bg-content1 overflow-hidden shadow-xs">
+            <Accordion.Heading>
+              <Accordion.Trigger className="px-6 py-4 w-full flex items-center justify-between font-bold text-sm text-foreground hover:bg-default-50 transition-colors">
+                <span className="text-sm font-bold text-foreground flex items-center gap-2.5">
+                  <Cpu className="size-4 text-default-500" /> Developer
+                </span>
+                <Accordion.Indicator>
+                  <ChevronDown className="size-4 text-default-400" />
+                </Accordion.Indicator>
+              </Accordion.Trigger>
+            </Accordion.Heading>
+            <Accordion.Panel>
+              <Accordion.Body className="p-6 border-t border-divider space-y-6 bg-white dark:bg-content1">
+                {/* MCP Server Config */}
+                <div className="p-4 bg-default-50/80 dark:bg-default-50/20 rounded-2xl border border-divider space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-xs font-bold text-foreground">MCP Server</div>
+                      <div className="text-[11px] text-default-400">Connect ChatGPT, Claude, Cursor & Codex</div>
+                    </div>
+                    <span className="px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-black text-white dark:bg-white dark:text-black uppercase">
+                      MCP v1.0
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <FormLabel info="Endpoint URL for LLM clients">MCP Server URL</FormLabel>
+                      <Input
+                        readOnly
+                        value="http://localhost:3000/api/mcp"
+                        className="w-full h-10 px-3.5 text-xs bg-default-100/80 dark:bg-default-50/40 text-foreground border border-divider rounded-xl font-mono"
+                      />
+                    </div>
+                    <div>
+                      <FormLabel info="Bearer token authentication key">MCP Access Key</FormLabel>
+                      <Input
+                        type="password"
+                        value="mcp-secret-key-123456789"
+                        className="w-full h-10 px-3.5 text-xs bg-default-100/80 dark:bg-default-50/40 text-foreground border border-divider rounded-xl font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  {/* MCP Permission Scope */}
+                  <div className="p-3 bg-card border border-divider rounded-xl space-y-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <FormLabel info="Permission role for MCP clients">Permission Scope</FormLabel>
+                        <Select
+                          selectedKey="write_publish"
+                          className="w-full"
+                          aria-label="MCP Scope"
+                        >
+                          <Select.Trigger className="w-full h-10 px-3.5 text-xs bg-default-100/80 dark:bg-default-50/40 text-foreground border border-divider rounded-xl flex items-center justify-between">
+                            <Select.Value />
+                            <Select.Indicator />
+                          </Select.Trigger>
+                          <Select.Popover>
+                            <ListBox>
+                              <ListBox.Item id="write_publish">Write & Publish</ListBox.Item>
+                              <ListBox.Item id="read_only">Read Only</ListBox.Item>
+                              <ListBox.Item id="full_admin">Full Admin</ListBox.Item>
+                            </ListBox>
+                          </Select.Popover>
+                        </Select>
+                      </div>
+
+                      <div className="flex items-center justify-between p-3 bg-default-100/50 dark:bg-default-50/30 rounded-xl border border-divider">
+                        <div>
+                          <div className="text-xs font-bold text-foreground">Require Confirmation</div>
+                          <div className="text-[11px] text-default-400">Ask in client before publishing</div>
+                        </div>
+                        <Switch isSelected={true} size="sm" aria-label="Require Approval" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* AIPUB REST API Keys Manager */}
+                <div className="p-4 bg-default-50/80 dark:bg-default-50/20 rounded-2xl border border-divider space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-xs font-bold text-foreground">AIPUB REST API Keys</div>
+                      <div className="text-[11px] text-default-400">Generate secret keys for external REST API requests</div>
+                    </div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onPress={() => setShowApiKeyForm(true)}
+                    >
+                      + Generate API Key
+                    </Button>
+                  </div>
+
+                  {/* Interactive API Key Creation Card */}
+                  {showApiKeyForm && (
+                    <div className="p-4 bg-default-100/80 dark:bg-default-50/40 border border-primary/40 rounded-xl space-y-3 shadow-xs">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-foreground">Create New REST API Key</span>
+                        <Button type="button" variant="ghost" size="sm" isIconOnly onPress={() => setShowApiKeyForm(false)}>✕</Button>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <FormLabel info="Name or description for this key">Key Name</FormLabel>
+                          <Input
+                            placeholder="e.g. Mobile App Key, Analytics Server"
+                            value={newKeyName}
+                            onChange={(e) => setNewKeyName(e.target.value)}
+                            className="w-full"
+                          />
+                        </div>
+
+                        <div>
+                          <FormLabel info="Permission role scope">Permission Scope</FormLabel>
+                          <Select
+                            selectedKey={newKeyScope}
+                            onSelectionChange={(key) => key && setNewKeyScope(key as string)}
+                            className="w-full"
+                            aria-label="New Key Scope"
+                          >
+                            <Select.Trigger className="w-full h-10 px-3.5 text-xs bg-white dark:bg-content1 text-foreground border border-divider rounded-xl flex items-center justify-between">
+                              <Select.Value />
+                              <Select.Indicator />
+                            </Select.Trigger>
+                            <Select.Popover>
+                              <ListBox>
+                                <ListBox.Item id="Full Access">Full Access</ListBox.Item>
+                                <ListBox.Item id="Publishing Only">Publishing Only</ListBox.Item>
+                                <ListBox.Item id="Read Only">Read Only</ListBox.Item>
+                                <ListBox.Item id="Workflow Execution">Workflow Execution</ListBox.Item>
+                              </ListBox>
+                            </Select.Popover>
+                          </Select>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end gap-2 pt-1">
+                        <Button type="button" size="sm" variant="ghost" onPress={() => setShowApiKeyForm(false)}>Cancel</Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          onPress={() => {
+                            if (!newKeyName.trim()) return
+                            const generatedKey = {
+                              id: `key-${Date.now()}`,
+                              name: newKeyName.trim(),
+                              key: `aipub_sk_live_${Math.random().toString(36).substring(2)}${Date.now().toString(36)}`,
+                              scope: newKeyScope,
+                              status: "Active",
+                              createdAt: new Date().toISOString().split("T")[0]
+                            }
+                            setApiKeysList([...apiKeysList, generatedKey])
+                            setNewKeyName("")
+                            setShowApiKeyForm(false)
+                            setMsg(`Created API Key "${generatedKey.name}" with scope "${newKeyScope}"!`)
+                            setTimeout(() => setMsg(null), 3000)
+                          }}
+                        >
+                          Generate Key
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* API Keys List */}
+                  <div className="space-y-3">
+                    {apiKeysList.map((k) => (
+                      <div key={k.id} className="p-3.5 bg-card border border-divider rounded-xl space-y-2">
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-xs font-bold text-foreground">{k.name}</span>
+
+                          <div className="flex items-center gap-2">
+                            <Chip variant="soft" color="accent" size="sm">
+                              {k.scope}
+                            </Chip>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              isIconOnly
+                              className="text-danger-500 hover:bg-danger-50 h-7 w-7"
+                              onPress={() => setApiKeysList(apiKeysList.filter((item) => item.id !== k.id))}
+                            >
+                              ✕
+                            </Button>
+                          </div>
+                        </div>
+
+                        <div className="relative flex items-center w-full">
+                          <Input
+                            type="password"
+                            readOnly
+                            value={k.key}
+                            className="w-full font-mono text-xs pr-10"
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            isIconOnly
+                            className="absolute right-1.5 h-7 w-7 text-default-400 hover:text-foreground"
+                            onPress={() => {
+                              if (navigator.clipboard) {
+                                navigator.clipboard.writeText(k.key)
+                                setMsg(`Copied ${k.name} secret key!`)
+                                setTimeout(() => setMsg(null), 2500)
+                              }
+                            }}
+                          >
+                            <Copy className="size-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Multiple Webhooks Manager */}
+                <div className="p-4 bg-default-50/80 dark:bg-default-50/20 rounded-2xl border border-divider space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-xs font-bold text-foreground">Webhooks Manager</div>
+                      <div className="text-[11px] text-default-400">Multiple inbound & outbound endpoints</div>
+                    </div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onPress={() => setShowWebhookForm(true)}
+                    >
+                      + Add Webhook
+                    </Button>
+                  </div>
+
+                  {/* Interactive Webhook Creation Card */}
+                  {showWebhookForm && (
+                    <div className="p-4 bg-default-100/80 dark:bg-default-50/40 border border-primary/40 rounded-xl space-y-3 shadow-xs">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-foreground">Create New Webhook Endpoint</span>
+                        <Button type="button" variant="ghost" size="sm" isIconOnly onPress={() => setShowWebhookForm(false)}>✕</Button>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                          <FormLabel info="Name of the webhook endpoint">Webhook Name</FormLabel>
+                          <Input
+                            placeholder="e.g. Zapier Auto-Post"
+                            value={newWhName}
+                            onChange={(e) => setNewWhName(e.target.value)}
+                            className="w-full"
+                          />
+                        </div>
+
+                        <div>
+                          <FormLabel info="Select webhook direction">Webhook Type</FormLabel>
+                          <Select
+                            selectedKey={newWhType.toLowerCase()}
+                            onSelectionChange={(key) => key && setNewWhType(key === "inbound" ? "Inbound" : "Outbound")}
+                            className="w-full"
+                            aria-label="New Webhook Type"
+                          >
+                            <Select.Trigger className="w-full h-10 px-3.5 text-xs bg-white dark:bg-content1 text-foreground border border-divider rounded-xl flex items-center justify-between">
+                              <Select.Value />
+                              <Select.Indicator />
+                            </Select.Trigger>
+                            <Select.Popover>
+                              <ListBox>
+                                <ListBox.Item id="outbound">Outbound (Event Push)</ListBox.Item>
+                                <ListBox.Item id="inbound">Inbound (Workflow Trigger)</ListBox.Item>
+                              </ListBox>
+                            </Select.Popover>
+                          </Select>
+                        </div>
+
+                        <div>
+                          <FormLabel info="Target event subscription tag">Subscribed Event Tag</FormLabel>
+                          <Select
+                            selectedKey={newWhEvents}
+                            onSelectionChange={(key) => key && setNewWhEvents(key as string)}
+                            className="w-full"
+                            aria-label="Event Tag"
+                          >
+                            <Select.Trigger className="w-full h-10 px-3.5 text-xs bg-white dark:bg-content1 text-foreground border border-divider rounded-xl flex items-center justify-between">
+                              <Select.Value />
+                              <Select.Indicator />
+                            </Select.Trigger>
+                            <Select.Popover>
+                              <ListBox>
+                                <ListBox.Item id="Article.Published">Article.Published</ListBox.Item>
+                                <ListBox.Item id="Workflow.Started">Workflow.Started</ListBox.Item>
+                                <ListBox.Item id="Workflow.Failed">Workflow.Failed</ListBox.Item>
+                                <ListBox.Item id="All Events">All Events</ListBox.Item>
+                              </ListBox>
+                            </Select.Popover>
+                          </Select>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <FormLabel info="Destination URL endpoint">Endpoint URL</FormLabel>
+                          <Input
+                            placeholder="https://your-server.com/api/webhook"
+                            value={newWhUrl}
+                            onChange={(e) => setNewWhUrl(e.target.value)}
+                            className="w-full"
+                          />
+                        </div>
+
+                        <div>
+                          <FormLabel info="Signing secret key">HMAC Signing Secret</FormLabel>
+                          <Input
+                            placeholder="whsec_custom123"
+                            value={newWhSecret}
+                            onChange={(e) => setNewWhSecret(e.target.value)}
+                            className="w-full font-mono"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end gap-2 pt-1">
+                        <Button type="button" size="sm" variant="ghost" onPress={() => setShowWebhookForm(false)}>Cancel</Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          onPress={() => {
+                            if (!newWhName.trim() || !newWhUrl.trim()) return
+                            const generatedWh = {
+                              id: `wh-${Date.now()}`,
+                              name: newWhName.trim(),
+                              url: newWhUrl.trim(),
+                              type: newWhType,
+                              events: newWhEvents,
+                              secret: newWhSecret.trim() || `whsec_${Date.now()}`,
+                              status: "Active"
+                            }
+                            setWebhooksList([...webhooksList, generatedWh])
+                            setNewWhName("")
+                            setNewWhUrl("")
+                            setNewWhSecret("")
+                            setShowWebhookForm(false)
+                            setMsg(`Added Webhook "${generatedWh.name}" (${newWhType})!`)
+                            setTimeout(() => setMsg(null), 3000)
+                          }}
+                        >
+                          Add Webhook
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Webhooks Table / List */}
+                  <div className="space-y-3">
+                    {webhooksList.map((wh) => (
+                      <div key={wh.id} className="p-3.5 bg-card border border-divider rounded-xl space-y-3">
+                        <div className="flex items-center justify-between gap-3">
+                          {/* Static Webhook Name */}
+                          <div className="flex items-center gap-2 flex-1 max-w-sm">
+                            <span className="text-xs font-bold text-foreground">{wh.name}</span>
+                            <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-black text-white dark:bg-white dark:text-black uppercase shrink-0">
+                              {wh.type}
+                            </span>
+                            <Chip variant="soft" color="accent" size="sm">
+                              {wh.events}
+                            </Chip>
+                          </div>
+
+                          <div className="flex items-center gap-2 shrink-0">
+                            <Switch
+                              isSelected={wh.status === "Active"}
+                              onChange={() => {
+                                const next = webhooksList.map((w) =>
+                                  w.id === wh.id ? { ...w, status: w.status === "Active" ? "Disabled" : "Active" } : w
+                                )
+                                setWebhooksList(next)
+                              }}
+                              size="sm"
+                              aria-label={`Toggle ${wh.name}`}
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              isIconOnly
+                              className="text-danger-500 hover:bg-danger-50 h-7 w-7"
+                              onPress={() => setWebhooksList(webhooksList.filter((w) => w.id !== wh.id))}
+                            >
+                              ✕
+                            </Button>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                          <Input
+                            placeholder="Webhook URL"
+                            value={wh.url}
+                            onChange={(e) => {
+                              const val = e.target.value
+                              setWebhooksList(webhooksList.map((w) => (w.id === wh.id ? { ...w, url: val } : w)))
+                            }}
+                            className="w-full"
+                          />
+                          <Select
+                            selectedKey={wh.type.toLowerCase()}
+                            onSelectionChange={(key) => {
+                              const val = key === "inbound" ? "Inbound" : "Outbound"
+                              setWebhooksList(webhooksList.map((w) => (w.id === wh.id ? { ...w, type: val } : w)))
+                            }}
+                            className="w-full"
+                            aria-label="Webhook Type"
+                          >
+                            <Select.Trigger className="w-full h-10 px-3.5 text-xs bg-default-100/80 dark:bg-default-50/40 text-foreground border border-divider rounded-xl flex items-center justify-between">
+                              <Select.Value />
+                              <Select.Indicator />
+                            </Select.Trigger>
+                            <Select.Popover>
+                              <ListBox>
+                                <ListBox.Item id="outbound">Outbound (Event)</ListBox.Item>
+                                <ListBox.Item id="inbound">Inbound (Trigger)</ListBox.Item>
+                              </ListBox>
+                            </Select.Popover>
+                          </Select>
+                          <Input
+                            type="password"
+                            placeholder="Signing Secret"
+                            value={wh.secret}
+                            onChange={(e) => {
+                              const val = e.target.value
+                              setWebhooksList(webhooksList.map((w) => (w.id === wh.id ? { ...w, secret: val } : w)))
+                            }}
+                            className="w-full font-mono"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </Accordion.Body>
             </Accordion.Panel>

@@ -2,553 +2,639 @@
 
 import React, { useState } from "react"
 import {
-  Card, CardContent, Button, Chip, Input, Modal, ModalDialog, ModalHeader, ModalBody, ModalFooter
+  Card,
+  Button,
+  Chip,
+  Input,
+  Select,
+  ListBox,
+  Switch
 } from "@heroui/react"
-import { CheckCircle2, Eye, EyeOff, Play, Loader2, AlertCircle, Sparkles, ShieldCheck } from "lucide-react"
+import {
+  CheckCircle2,
+  Play,
+  Loader2,
+  AlertCircle,
+  Search,
+  ChevronDown,
+  ChevronUp,
+  Cpu,
+  Layers,
+  Key,
+  ShieldCheck
+} from "lucide-react"
+import { DataCard } from "@/components/shared/data-card"
 
-const INTEGRATION_CATALOG = [
+const FLAT_INTEGRATIONS = [
   {
-    group: "AI Providers",
-    items: [
-      {
-        id: "openrouter",
-        name: "OpenRouter",
-        letter: "O",
-        avatarBg: "bg-violet-600 text-white",
-        activeGradient: "from-violet-500/10 via-purple-500/5 to-transparent",
-        type: "api_key",
-        categoryTags: ["AI"],
-        description: "Unified LLM gateway for Claude 3.5, GPT-4o & Gemini.",
-        fields: [{ key: "api_key", label: "OpenRouter API Key", placeholder: "sk-or-v1-..." }],
-        testActionLabel: "Ping LLM Gateway",
-        testPayloadPlaceholder: "Prompt: 'ping openrouter'"
-      },
-      {
-        id: "openai",
-        name: "OpenAI",
-        letter: "O",
-        avatarBg: "bg-emerald-600 text-white",
-        activeGradient: "from-emerald-500/10 via-teal-500/5 to-transparent",
-        type: "api_key",
-        categoryTags: ["AI"],
-        description: "Direct connection to GPT models & text embeddings.",
-        fields: [{ key: "api_key", label: "OpenAI API Key", placeholder: "sk-..." }],
-        testActionLabel: "Test OpenAI API",
-        testPayloadPlaceholder: "Model: gpt-4o-mini"
-      }
-    ]
+    id: "openrouter",
+    group: "AI",
+    name: "OpenRouter",
+    letter: "O",
+    type: "api_key",
+    categoryTag: "AI",
+    description: "Unified LLM gateway for Claude 3.5, GPT-4o, Llama 3 & Gemini.",
+    fields: [{ key: "api_key", label: "OpenRouter API Key", placeholder: "sk-or-v1-..." }],
+    testActionLabel: "Ping LLM Gateway"
   },
   {
-    group: "Image & Media",
-    items: [
-      {
-        id: "fal_ai",
-        name: "Fal.ai",
-        letter: "F",
-        avatarBg: "bg-orange-500 text-white",
-        activeGradient: "from-orange-500/10 via-amber-500/5 to-transparent",
-        type: "api_key",
-        categoryTags: ["Media"],
-        description: "FLUX.1 and SDXL featured article image generation.",
-        fields: [{ key: "api_key", label: "Fal.ai API Key", placeholder: "fal-..." }],
-        testActionLabel: "Test Image Gen",
-        testPayloadPlaceholder: "Prompt: 'Tech magazine cover'"
-      }
-    ]
+    id: "openai",
+    group: "AI",
+    name: "OpenAI",
+    letter: "O",
+    type: "api_key",
+    categoryTag: "AI",
+    description: "Direct connection to GPT-4o models & text embedding vectors.",
+    fields: [{ key: "api_key", label: "OpenAI API Key", placeholder: "sk-..." }],
+    testActionLabel: "Test OpenAI API"
   },
   {
-    group: "Research & Web Scrapers",
-    items: [
-      {
-        id: "rss_extractor",
-        name: "RSS Extractor",
-        letter: "R",
-        avatarBg: "bg-amber-500 text-white",
-        activeGradient: "from-amber-500/10 via-orange-500/5 to-transparent",
-        type: "toggle",
-        categoryTags: ["Intake"],
-        description: "Intake engine for RSS and Atom feeds.",
-        fields: [],
-        testActionLabel: "Test RSS Stream",
-        testPayloadPlaceholder: "https://techcrunch.com/feed/"
-      },
-      {
-        id: "trafilatura",
-        name: "Trafilatura",
-        letter: "T",
-        avatarBg: "bg-emerald-600 text-white",
-        activeGradient: "from-emerald-500/10 via-green-500/5 to-transparent",
-        type: "toggle",
-        categoryTags: ["Scraper"],
-        description: "Python HTML text and article extractor.",
-        fields: [],
-        testActionLabel: "Test Scrape Engine",
-        testPayloadPlaceholder: "https://news.ycombinator.com"
-      },
-      {
-        id: "searxng",
-        name: "SearXNG",
-        letter: "S",
-        avatarBg: "bg-blue-600 text-white",
-        activeGradient: "from-blue-500/10 via-cyan-500/5 to-transparent",
-        type: "toggle",
-        categoryTags: ["Search"],
-        description: "Privacy meta-search engine for discovery.",
-        fields: [{ key: "base_url", label: "SearXNG Instance URL", placeholder: "http://searxng:8080" }],
-        testActionLabel: "Test Search Query",
-        testPayloadPlaceholder: "Query: 'Autonomous AI Agents'"
-      },
-      {
-        id: "playwright",
-        name: "Playwright",
-        letter: "P",
-        avatarBg: "bg-indigo-600 text-white",
-        activeGradient: "from-indigo-500/10 via-violet-500/5 to-transparent",
-        type: "toggle",
-        categoryTags: ["Scraper"],
-        description: "Headless browser rendering for JS apps.",
-        fields: [],
-        testActionLabel: "Test Chromium Headless",
-        testPayloadPlaceholder: "https://react.dev"
-      },
-      {
-        id: "firecrawl",
-        name: "Firecrawl",
-        letter: "F",
-        avatarBg: "bg-red-600 text-white",
-        activeGradient: "from-red-500/10 via-rose-500/5 to-transparent",
-        type: "api_key",
-        categoryTags: ["Scraper", "Search"],
-        description: "Cloud web scraper for protected sites.",
-        fields: [{ key: "api_key", label: "Firecrawl API Key", placeholder: "fc-..." }],
-        testActionLabel: "Test Firecrawl Scraper",
-        testPayloadPlaceholder: "https://cloudflare.com"
-      }
-    ]
+    id: "fal_ai",
+    group: "Media",
+    name: "Fal.ai",
+    letter: "F",
+    type: "api_key",
+    categoryTag: "Media",
+    description: "FLUX.1 and SDXL featured article image generation service.",
+    fields: [{ key: "api_key", label: "Fal.ai API Key", placeholder: "fal-..." }],
+    testActionLabel: "Test Image Gen"
   },
   {
-    group: "Search & SEO",
-    items: [
-      {
-        id: "dataforseo",
-        name: "DataForSEO",
-        letter: "D",
-        avatarBg: "bg-teal-600 text-white",
-        activeGradient: "from-teal-500/10 via-emerald-500/5 to-transparent",
-        type: "api_key",
-        categoryTags: ["Search", "SEO"],
-        description: "SERP search volume and keyword data.",
-        fields: [
-          { key: "login", label: "Login Email", placeholder: "you@example.com" },
-          { key: "password", label: "Password", placeholder: "••••••••" }
-        ],
-        testActionLabel: "Test Keyword SERP",
-        testPayloadPlaceholder: "Keyword: 'AI Publishing OS'"
-      }
-    ]
+    id: "rss_extractor",
+    group: "Scraper",
+    name: "RSS Extractor",
+    letter: "R",
+    type: "toggle",
+    categoryTag: "Scraper",
+    description: "Automated ingestion engine for RSS, Atom, and XML feeds.",
+    fields: [],
+    testActionLabel: "Test RSS Stream"
   },
   {
-    group: "Grammar & Style",
-    items: [
-      {
-        id: "languagetool",
-        name: "LanguageTool",
-        letter: "L",
-        avatarBg: "bg-teal-500 text-white",
-        activeGradient: "from-teal-500/10 via-cyan-500/5 to-transparent",
-        type: "api_key",
-        categoryTags: ["Grammar"],
-        description: "Spelling and style checker.",
-        fields: [
-          { key: "base_url", label: "API Base URL", placeholder: "https://api.languagetool.org" },
-          { key: "api_key", label: "API Key (Premium)", placeholder: "lt-..." }
-        ],
-        testActionLabel: "Test Grammar API",
-        testPayloadPlaceholder: "Text: 'This are an error.'"
-      }
-    ]
+    id: "trafilatura",
+    group: "Scraper",
+    name: "Trafilatura",
+    letter: "T",
+    type: "toggle",
+    categoryTag: "Scraper",
+    description: "Python HTML text and article main-content extractor.",
+    fields: [],
+    testActionLabel: "Test Scrape Engine"
   },
   {
-    group: "Storage & CDN",
-    items: [
-      {
-        id: "cloudflare_r2",
-        name: "Cloudflare R2",
-        letter: "C",
-        avatarBg: "bg-yellow-600 text-white",
-        activeGradient: "from-yellow-500/10 via-amber-500/5 to-transparent",
-        type: "api_key",
-        categoryTags: ["Storage"],
-        description: "S3 object storage for media files.",
-        fields: [
-          { key: "account_id", label: "Account ID", placeholder: "abc123..." },
-          { key: "access_key_id", label: "Access Key ID", placeholder: "..." },
-          { key: "secret_access_key", label: "Secret Access Key", placeholder: "••••••••" },
-          { key: "bucket_name", label: "Bucket Name", placeholder: "my-bucket" }
-        ],
-        testActionLabel: "Test S3 Storage Ping",
-        testPayloadPlaceholder: "Bucket: my-bucket"
-      }
-    ]
+    id: "searxng",
+    group: "Scraper",
+    name: "SearXNG",
+    letter: "S",
+    type: "toggle",
+    categoryTag: "Scraper",
+    description: "Privacy-focused meta-search engine for research discovery.",
+    fields: [{ key: "base_url", label: "SearXNG Instance URL", placeholder: "http://searxng:8080" }],
+    testActionLabel: "Test Search Query"
   },
   {
-    group: "Email & Delivery",
-    items: [
-      {
-        id: "smtp",
-        name: "SMTP Server",
-        letter: "S",
-        avatarBg: "bg-indigo-600 text-white",
-        activeGradient: "from-indigo-500/10 via-blue-500/5 to-transparent",
-        type: "api_key",
-        categoryTags: ["Email"],
-        description: "Transactional SMTP email server.",
-        fields: [
-          { key: "host", label: "SMTP Host", placeholder: "smtp.example.com" },
-          { key: "port", label: "Port", placeholder: "587" },
-          { key: "username", label: "Username", placeholder: "user@example.com" },
-          { key: "password", label: "Password", placeholder: "••••••••" }
-        ],
-        testActionLabel: "Test SMTP Handshake",
-        testPayloadPlaceholder: "To: test@domain.com"
-      },
-      {
-        id: "resend",
-        name: "Resend",
-        letter: "R",
-        avatarBg: "bg-pink-600 text-white",
-        activeGradient: "from-pink-500/10 via-rose-500/5 to-transparent",
-        type: "api_key",
-        categoryTags: ["Email"],
-        description: "Developer email delivery API.",
-        fields: [{ key: "api_key", label: "Resend API Key", placeholder: "re_..." }],
-        testActionLabel: "Test Resend Dispatch",
-        testPayloadPlaceholder: "To: test@domain.com"
-      }
-    ]
+    id: "playwright",
+    group: "Scraper",
+    name: "Playwright",
+    letter: "P",
+    type: "toggle",
+    categoryTag: "Scraper",
+    description: "Headless Chromium browser rendering for JS-heavy web apps.",
+    fields: [],
+    testActionLabel: "Test Headless Rendering"
   },
   {
-    group: "Notifications & Webhooks",
-    items: [
-      {
-        id: "slack",
-        name: "Slack",
-        letter: "S",
-        avatarBg: "bg-purple-600 text-white",
-        activeGradient: "from-purple-500/10 via-indigo-500/5 to-transparent",
-        type: "api_key",
-        categoryTags: ["Notifications"],
-        description: "Real-time alerts to Slack channels.",
-        fields: [{ key: "webhook_url", label: "Slack Webhook URL", placeholder: "https://hooks.slack.com/services/..." }],
-        testActionLabel: "Test Slack Webhook",
-        testPayloadPlaceholder: "Message: 'Publishing Alert Test'"
-      },
-      {
-        id: "discord",
-        name: "Discord",
-        letter: "D",
-        avatarBg: "bg-blue-600 text-white",
-        activeGradient: "from-blue-500/10 via-indigo-500/5 to-transparent",
-        type: "api_key",
-        categoryTags: ["Notifications"],
-        description: "Publishing updates to Discord.",
-        fields: [{ key: "webhook_url", label: "Discord Webhook URL", placeholder: "https://discord.com/api/webhooks/..." }],
-        testActionLabel: "Test Discord Bot",
-        testPayloadPlaceholder: "Message: 'Discord Bot Test'"
-      },
-      {
-        id: "webhooks",
-        name: "Webhooks",
-        letter: "W",
-        avatarBg: "bg-slate-600 text-white",
-        activeGradient: "from-slate-500/10 via-gray-500/5 to-transparent",
-        type: "api_key",
-        categoryTags: ["Developer"],
-        description: "Custom HTTP POST callbacks.",
-        fields: [
-          { key: "endpoint_url", label: "Endpoint URL", placeholder: "https://your-app.com/webhook" },
-          { key: "secret", label: "Signing Secret", placeholder: "whsec_..." }
-        ],
-        testActionLabel: "Test POST Callback",
-        testPayloadPlaceholder: "Payload: { event: 'ping' }"
-      },
-      {
-        id: "mcp_servers",
-        name: "MCP Servers",
-        letter: "M",
-        avatarBg: "bg-slate-700 text-white",
-        activeGradient: "from-slate-500/10 via-zinc-500/5 to-transparent",
-        type: "api_key",
-        categoryTags: ["Developer"],
-        description: "Model Context Protocol servers.",
-        fields: [
-          { key: "server_url", label: "MCP Server URL", placeholder: "http://localhost:3001/mcp" },
-          { key: "api_key", label: "API Key", placeholder: "mcp-..." }
-        ],
-        testActionLabel: "Test MCP Handshake",
-        testPayloadPlaceholder: "RPC: tools/list"
-      }
-    ]
+    id: "firecrawl",
+    group: "Scraper",
+    name: "Firecrawl",
+    letter: "F",
+    type: "api_key",
+    categoryTag: "Scraper",
+    description: "Cloud web scraper and crawler for protected websites.",
+    fields: [{ key: "api_key", label: "Firecrawl API Key", placeholder: "fc-..." }],
+    testActionLabel: "Test Firecrawl API"
+  },
+  {
+    id: "dataforseo",
+    group: "SEO",
+    name: "DataForSEO",
+    letter: "D",
+    type: "api_key",
+    categoryTag: "SEO",
+    description: "Live SERP search volume, keyword difficulty & ranking data.",
+    fields: [
+      { key: "login", label: "Login Email", placeholder: "you@example.com" },
+      { key: "password", label: "Password", placeholder: "••••••••" }
+    ],
+    testActionLabel: "Test SERP Keyword API"
+  },
+  {
+    id: "languagetool",
+    group: "Grammar",
+    name: "LanguageTool",
+    letter: "L",
+    type: "api_key",
+    categoryTag: "Grammar",
+    description: "Automated spelling, grammar, and editorial style checker.",
+    fields: [
+      { key: "base_url", label: "API Base URL", placeholder: "https://api.languagetool.org" },
+      { key: "api_key", label: "API Key (Premium)", placeholder: "lt-..." }
+    ],
+    testActionLabel: "Test Grammar API"
+  },
+  {
+    id: "cloudflare_r2",
+    group: "Storage",
+    name: "Cloudflare R2",
+    letter: "C",
+    type: "api_key",
+    categoryTag: "Storage",
+    description: "Zero egress-fee S3 object storage for article media files.",
+    fields: [
+      { key: "account_id", label: "Account ID", placeholder: "abc123..." },
+      { key: "access_key_id", label: "Access Key ID", placeholder: "..." },
+      { key: "secret_access_key", label: "Secret Access Key", placeholder: "••••••••" },
+      { key: "bucket_name", label: "Bucket Name", placeholder: "my-bucket" }
+    ],
+    testActionLabel: "Test S3 Storage Handshake"
+  },
+  {
+    id: "smtp",
+    group: "Email",
+    name: "SMTP Server",
+    letter: "S",
+    type: "api_key",
+    categoryTag: "Email",
+    description: "Custom transactional SMTP email server for system dispatches.",
+    fields: [
+      { key: "host", label: "SMTP Host", placeholder: "smtp.example.com" },
+      { key: "port", label: "Port", placeholder: "587" },
+      { key: "username", label: "Username", placeholder: "user@example.com" },
+      { key: "password", label: "Password", placeholder: "••••••••" }
+    ],
+    testActionLabel: "Test SMTP Handshake"
+  },
+  {
+    id: "resend",
+    group: "Email",
+    name: "Resend",
+    letter: "R",
+    type: "api_key",
+    categoryTag: "Email",
+    description: "Modern developer email delivery API service.",
+    fields: [{ key: "api_key", label: "Resend API Key", placeholder: "re_..." }],
+    testActionLabel: "Test Resend Dispatch"
+  },
+  {
+    id: "slack",
+    group: "Alerts",
+    name: "Slack",
+    letter: "S",
+    type: "api_key",
+    categoryTag: "Alerts",
+    description: "Real-time automated alerts to Slack team channels.",
+    fields: [{ key: "webhook_url", label: "Slack Webhook URL", placeholder: "https://hooks.slack.com/services/..." }],
+    testActionLabel: "Test Slack Webhook"
+  },
+  {
+    id: "discord",
+    group: "Alerts",
+    name: "Discord",
+    letter: "D",
+    type: "api_key",
+    categoryTag: "Alerts",
+    description: "Publishing and editorial updates to Discord channels.",
+    fields: [{ key: "webhook_url", label: "Discord Webhook URL", placeholder: "https://discord.com/api/webhooks/..." }],
+    testActionLabel: "Test Discord Bot"
   }
 ]
 
-const ALL_IDS = INTEGRATION_CATALOG.flatMap((g) => g.items.map((i) => i.id))
 const INITIAL_STATUSES: Record<string, string> = Object.fromEntries(
-  ALL_IDS.map((id) => [
-    id,
-    ["rss_extractor", "trafilatura", "searxng", "playwright"].includes(id) ? "active" : "inactive"
+  FLAT_INTEGRATIONS.map((i) => [
+    i.id,
+    ["rss_extractor", "trafilatura", "searxng", "playwright"].includes(i.id) ? "active" : "inactive"
   ])
 )
 
 export default function IntegrationsPage() {
   const [statuses, setStatuses] = useState<Record<string, string>>(INITIAL_STATUSES)
   const [credentials, setCredentials] = useState<Record<string, Record<string, string>>>({})
-  const [selectedIntegration, setSelectedIntegration] = useState<any | null>(null)
+  const [expandedId, setExpandedId] = useState<string | null>(null)
+  
+  // Filter & Sort State
+  const [searchQuery, setSearchQuery] = useState("")
+  const [categoryFilter, setCategoryFilter] = useState("all")
+  const [statusFilter, setStatusFilter] = useState("all")
+  const [typeFilter, setTypeFilter] = useState("all")
+  const [sortBy, setSortBy] = useState("name-asc")
+
+  // Form & Test State
   const [formValues, setFormValues] = useState<Record<string, string>>({})
-  const [showSecret, setShowSecret] = useState<Record<string, boolean>>({})
+  const [testingId, setTestingId] = useState<string | null>(null)
+  const [testResult, setTestResult] = useState<Record<string, { success: boolean; text: string }>>({})
+  const [testPassed, setTestPassed] = useState<Record<string, boolean>>({})
+  const [submittingId, setSubmittingId] = useState<string | null>(null)
   const [msg, setMsg] = useState<string | null>(null)
-  const [submitting, setSubmitting] = useState(false)
 
-  const [testPayload, setTestPayload] = useState("")
-  const [testing, setTesting] = useState(false)
-  const [testPassed, setTestPassed] = useState(false)
-  const [testResult, setTestResult] = useState<{ success: boolean; text: string } | null>(null)
-
-  const handleCardClick = (item: any) => {
-    if (item.type === "api_key") {
-      setSelectedIntegration(item)
+  // Toggle Accordion Expansion
+  const toggleExpand = (item: typeof FLAT_INTEGRATIONS[0]) => {
+    if (expandedId === item.id) {
+      setExpandedId(null)
+    } else {
+      setExpandedId(item.id)
       const existing = credentials[item.id] || {}
       const init: Record<string, string> = {}
-      item.fields.forEach((f: any) => { init[f.key] = existing[f.key] || "" })
+      item.fields.forEach((f) => { init[f.key] = existing[f.key] || "" })
       setFormValues(init)
-      setShowSecret({})
-      setTestPayload("")
-      setTestPassed(false)
-      setTestResult(null)
-    } else {
-      const current = statuses[item.id] || "inactive"
-      const nextStatus = current === "active" ? "inactive" : "active"
-      setStatuses((prev) => ({ ...prev, [item.id]: nextStatus }))
-      setMsg(`${item.name} ${nextStatus === "active" ? "activated" : "disabled"}.`)
-      setTimeout(() => setMsg(null), 3000)
     }
   }
 
-  const handleRunTest = () => {
-    if (!selectedIntegration) return
-    const hasEmptyField = selectedIntegration.fields.some((f: any) => !formValues[f.key] || !formValues[f.key].trim())
-
-    setTesting(true)
-    setTestResult(null)
-    setTestPassed(false)
-
-    setTimeout(() => {
-      setTesting(false)
-      if (hasEmptyField) {
-        setTestPassed(false)
-        setTestResult({
-          success: false,
-          text: `FAILED (401 Unauthorized): Please provide valid API Credentials before running test.`
-        })
-      } else {
-        setTestPassed(true)
-        setTestResult({
-          success: true,
-          text: `200 OK - Test verified successfully for ${selectedIntegration.name}! Latency: 124ms.`
-        })
-      }
-    }, 700)
+  // Toggle Active / Inactive Status
+  const handleToggleStatus = (id: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation()
+    const current = statuses[id] || "inactive"
+    const nextStatus = current === "active" ? "inactive" : "active"
+    setStatuses((prev) => ({ ...prev, [id]: nextStatus }))
+    
+    const targetItem = FLAT_INTEGRATIONS.find((i) => i.id === id)
+    setMsg(`${targetItem?.name || id} ${nextStatus === "active" ? "activated" : "disabled"}.`)
+    setTimeout(() => setMsg(null), 3000)
   }
 
-  const handleSaveAPIKey = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!selectedIntegration) return
+  // Diagnostic Test Handler
+  const handleRunDiagnosticTest = (item: typeof FLAT_INTEGRATIONS[0]) => {
+    const hasEmptyField = item.fields.some((f) => !formValues[f.key] || !formValues[f.key].trim())
 
-    if (!testPassed) {
-      setTestResult({
-        success: false,
-        text: `CANNOT ACTIVATE: You must run test and get a SUCCESS response before activating ${selectedIntegration.name}.`
-      })
+    setTestingId(item.id)
+    setTestResult((prev) => ({ ...prev, [item.id]: { success: false, text: "Testing connection..." } }))
+
+    setTimeout(() => {
+      setTestingId(null)
+      if (item.fields.length > 0 && hasEmptyField) {
+        setTestPassed((prev) => ({ ...prev, [item.id]: false }))
+        setTestResult((prev) => ({
+          ...prev,
+          [item.id]: {
+            success: false,
+            text: `FAILED (401 Unauthorized): Provide valid credentials before activating.`
+          }
+        }))
+      } else {
+        setTestPassed((prev) => ({ ...prev, [item.id]: true }))
+        setTestResult((prev) => ({
+          ...prev,
+          [item.id]: {
+            success: true,
+            text: `200 OK - Connection test verified successfully for ${item.name}! Latency: 118ms.`
+          }
+        }))
+      }
+    }, 600)
+  }
+
+  // Save Credentials & Activate
+  const handleSaveCredentials = (item: typeof FLAT_INTEGRATIONS[0], e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (item.type === "api_key" && !testPassed[item.id]) {
+      setTestResult((prev) => ({
+        ...prev,
+        [item.id]: {
+          success: false,
+          text: `TEST REQUIRED: Please click "${item.testActionLabel}" and verify success before saving.`
+        }
+      }))
       return
     }
 
-    setSubmitting(true)
+    setSubmittingId(item.id)
     setTimeout(() => {
-      setCredentials((prev) => ({ ...prev, [selectedIntegration.id]: { ...formValues } }))
-      setStatuses((prev) => ({ ...prev, [selectedIntegration.id]: "active" }))
-      setMsg(`${selectedIntegration.name} credentials verified & activated!`)
-      setSelectedIntegration(null)
-      setSubmitting(false)
-      setTimeout(() => setMsg(null), 3000)
+      setCredentials((prev) => ({ ...prev, [item.id]: { ...formValues } }))
+      setStatuses((prev) => ({ ...prev, [item.id]: "active" }))
+      setSubmittingId(null)
+      setMsg(`✓ ${item.name} credentials verified & saved!`)
+      setTimeout(() => setMsg(null), 3500)
     }, 400)
   }
 
+  // Filter & Sort Logic
+  const filteredIntegrations = FLAT_INTEGRATIONS.filter((item) => {
+    const status = statuses[item.id] || "inactive"
+    const matchesSearch =
+      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.categoryTag.toLowerCase().includes(searchQuery.toLowerCase())
+
+    const matchesCategory = categoryFilter === "all" || item.categoryTag === categoryFilter
+    const matchesStatus = statusFilter === "all" || status === statusFilter
+    const matchesType = typeFilter === "all" || item.type === typeFilter
+
+    return matchesSearch && matchesCategory && matchesStatus && matchesType
+  }).sort((a, b) => {
+    if (sortBy === "name-asc") return a.name.localeCompare(b.name)
+    if (sortBy === "name-desc") return b.name.localeCompare(a.name)
+    if (sortBy === "status") {
+      const statusA = statuses[a.id] || "inactive"
+      const statusB = statuses[b.id] || "inactive"
+      return statusA.localeCompare(statusB)
+    }
+    if (sortBy === "category") return a.categoryTag.localeCompare(b.categoryTag)
+    return 0
+  })
+
+  // Summary Metrics
+  const totalCount = FLAT_INTEGRATIONS.length
+  const activeCount = Object.values(statuses).filter((s) => s === "active").length
+  const apiCount = FLAT_INTEGRATIONS.filter((i) => i.type === "api_key").length
+  const builtinCount = FLAT_INTEGRATIONS.filter((i) => i.type === "toggle").length
+
   return (
-    <div className="space-y-8">
+    <div className="max-w-4xl mx-auto space-y-6 pb-20">
+      {/* Toast Notification Alert */}
       {msg && (
-        <div className="p-3 bg-success-50 border border-success-200 text-success-700 text-xs rounded-large flex items-center gap-2">
-          <CheckCircle2 className="size-4" />
-          <span>{msg}</span>
+        <div className="p-3 bg-success-50 border border-success-200 text-success-700 dark:bg-success-950/40 dark:border-success-800 dark:text-success-300 text-xs rounded-2xl flex items-center gap-2 animate-in fade-in duration-200">
+          <CheckCircle2 className="size-4 shrink-0 text-success-500" />
+          <span className="font-medium">{msg}</span>
         </div>
       )}
 
-      {INTEGRATION_CATALOG.map((group) => (
-        <div key={group.group}>
-          <h2 className="text-sm font-semibold tracking-tight text-foreground mb-3">
-            {group.group}
-          </h2>
+      {/* Standard Header Summary Cards (Matches Other Dashboard Pages) */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <DataCard
+          title="Total Services"
+          value={totalCount.toString()}
+          caption="All catalog integrations"
+          icon={Layers}
+        />
+        <DataCard
+          title="Active"
+          value={activeCount.toString()}
+          caption="Operational & ready"
+          icon={ShieldCheck}
+          pulseDot
+        />
+        <DataCard
+          title="API Gateways"
+          value={apiCount.toString()}
+          caption="External credentials"
+          icon={Key}
+        />
+        <DataCard
+          title="Built-in Engines"
+          value={builtinCount.toString()}
+          caption="Native background tools"
+          icon={Cpu}
+        />
+      </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {group.items.map((item) => {
-              const status = statuses[item.id] || "inactive"
-              const isActive = status === "active"
+      {/* Filter Toolbar */}
+      <div className="p-4 bg-card border border-divider rounded-2xl space-y-3">
+        <div className="flex flex-col sm:flex-row items-center gap-3">
+          <div className="relative flex-1 w-full">
+            <Search className="absolute left-3 top-2.5 size-4 text-default-400" />
+            <Input
+              placeholder="Search integrations or services..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 w-full"
+            />
+          </div>
 
-              return (
-                <Card
-                  key={item.id}
-                  onClick={() => handleCardClick(item)}
-                  className={`group relative overflow-hidden transition-all duration-200 border-divider cursor-pointer ${
-                    isActive ? "opacity-100" : "opacity-75 hover:opacity-100"
-                  }`}
+          <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
+            {/* Category Filter */}
+            <Select
+              selectedKey={categoryFilter}
+              onSelectionChange={(key) => setCategoryFilter(key as string)}
+              className="w-32"
+              aria-label="Category Filter"
+            >
+              <Select.Trigger>
+                <Select.Value />
+                <Select.Indicator />
+              </Select.Trigger>
+              <Select.Popover>
+                <ListBox>
+                  <ListBox.Item id="all">All Tags</ListBox.Item>
+                  <ListBox.Item id="AI">AI</ListBox.Item>
+                  <ListBox.Item id="Media">Media</ListBox.Item>
+                  <ListBox.Item id="Scraper">Scraper</ListBox.Item>
+                  <ListBox.Item id="SEO">SEO</ListBox.Item>
+                  <ListBox.Item id="Grammar">Grammar</ListBox.Item>
+                  <ListBox.Item id="Storage">Storage</ListBox.Item>
+                  <ListBox.Item id="Email">Email</ListBox.Item>
+                  <ListBox.Item id="Alerts">Alerts</ListBox.Item>
+                  <ListBox.Item id="Developer">Developer</ListBox.Item>
+                </ListBox>
+              </Select.Popover>
+            </Select>
+
+            {/* Status Filter */}
+            <Select
+              selectedKey={statusFilter}
+              onSelectionChange={(key) => setStatusFilter(key as string)}
+              className="w-32"
+              aria-label="Status Filter"
+            >
+              <Select.Trigger>
+                <Select.Value />
+                <Select.Indicator />
+              </Select.Trigger>
+              <Select.Popover>
+                <ListBox>
+                  <ListBox.Item id="all">All Statuses</ListBox.Item>
+                  <ListBox.Item id="active">Active</ListBox.Item>
+                  <ListBox.Item id="inactive">Inactive</ListBox.Item>
+                </ListBox>
+              </Select.Popover>
+            </Select>
+
+            {/* Type Filter */}
+            <Select
+              selectedKey={typeFilter}
+              onSelectionChange={(key) => setTypeFilter(key as string)}
+              className="w-32"
+              aria-label="Type Filter"
+            >
+              <Select.Trigger>
+                <Select.Value />
+                <Select.Indicator />
+              </Select.Trigger>
+              <Select.Popover>
+                <ListBox>
+                  <ListBox.Item id="all">All Types</ListBox.Item>
+                  <ListBox.Item id="api_key">API Key</ListBox.Item>
+                  <ListBox.Item id="toggle">Built-in</ListBox.Item>
+                </ListBox>
+              </Select.Popover>
+            </Select>
+
+            {/* Sort Filter */}
+            <Select
+              selectedKey={sortBy}
+              onSelectionChange={(key) => setSortBy(key as string)}
+              className="w-36"
+              aria-label="Sort Options"
+            >
+              <Select.Trigger>
+                <Select.Value />
+                <Select.Indicator />
+              </Select.Trigger>
+              <Select.Popover>
+                <ListBox>
+                  <ListBox.Item id="name-asc">Sort: Name A-Z</ListBox.Item>
+                  <ListBox.Item id="name-desc">Sort: Name Z-A</ListBox.Item>
+                  <ListBox.Item id="status">Sort: Status</ListBox.Item>
+                  <ListBox.Item id="category">Sort: Tag</ListBox.Item>
+                </ListBox>
+              </Select.Popover>
+            </Select>
+          </div>
+        </div>
+      </div>
+
+      {/* Horizontal Accordion List (Uniform Borders & Layout) */}
+      <div className="space-y-3">
+        {filteredIntegrations.length === 0 ? (
+          <div className="p-8 text-center bg-card border border-divider rounded-2xl space-y-2">
+            <AlertCircle className="size-8 text-default-400 mx-auto" />
+            <p className="text-sm font-semibold text-foreground">No integrations match your filter criteria.</p>
+            <p className="text-xs text-default-400">Try adjusting your search query or reset filter options.</p>
+          </div>
+        ) : (
+          filteredIntegrations.map((item) => {
+            const status = statuses[item.id] || "inactive"
+            const isActive = status === "active"
+            const isExpanded = expandedId === item.id
+
+            return (
+              <Card
+                key={item.id}
+                className="transition-all duration-200 border border-divider rounded-2xl bg-card overflow-hidden"
+              >
+                {/* Accordion Header Row */}
+                <div
+                  onClick={() => toggleExpand(item)}
+                  className="p-4 flex items-center justify-between gap-4 cursor-pointer select-none bg-card hover:bg-default-50/60 transition-colors"
                 >
-                  <div
-                    className={`h-10 w-full bg-gradient-to-b border-b border-divider/40 px-3 flex items-center justify-between transition-colors ${
-                      isActive ? item.activeGradient : "from-default-100/40 to-transparent"
-                    }`}
-                  >
+                  {/* LEFT SIDE: Neutral Logo + Title + Tag + Description Below */}
+                  <div className="flex items-start gap-3.5 min-w-0 flex-1">
+                    {/* Neutral Logo Avatar (No Color Background) */}
+                    <div className="size-10 rounded-xl bg-default-100 dark:bg-default-100/60 text-foreground border border-divider font-bold text-sm flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
+                      {item.letter}
+                    </div>
+
+                    <div className="min-w-0 flex-1 space-y-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="text-sm font-bold text-foreground tracking-tight">{item.name}</h3>
+                        <Chip variant="soft" color="accent" size="sm">
+                          {item.categoryTag}
+                        </Chip>
+                      </div>
+                      <p className="text-xs text-default-400 leading-normal line-clamp-1">
+                        {item.description}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* RIGHT SIDE: Black Type Badge + Active Status + Switch */}
+                  <div className="flex items-center gap-3 shrink-0">
+                    {/* Black Color Type Badge */}
+                    <span className="px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-black text-white dark:bg-white dark:text-black uppercase tracking-wider shadow-sm">
+                      {item.type === "toggle" ? "Built-in" : "API"}
+                    </span>
+
                     <Chip variant={isActive ? "primary" : "secondary"} size="sm">
                       {isActive ? "Active" : "Inactive"}
                     </Chip>
 
-                    <Chip variant="soft" color="accent" size="sm">
-                      {item.type === "toggle" ? "Built-in" : "API"}
-                    </Chip>
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <Switch
+                        isSelected={isActive}
+                        onChange={() => handleToggleStatus(item.id)}
+                        size="sm"
+                        aria-label={`Toggle ${item.name} Status`}
+                      />
+                    </div>
+
+                    <Button variant="ghost" size="sm" isIconOnly className="h-7 w-7 text-default-400">
+                      {isExpanded ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                    </Button>
                   </div>
+                </div>
 
-                  <CardContent className="p-4 flex flex-col items-center text-center space-y-2">
-                    <div
-                      className={`size-10 rounded-xl flex items-center justify-center font-bold text-sm shadow-sm -mt-7 border border-divider ${
-                        isActive ? item.avatarBg : "bg-default-100 text-default-400"
-                      }`}
-                    >
-                      {item.letter}
-                    </div>
-
-                    <h3 className="text-sm font-semibold tracking-tight text-foreground pt-0.5">
-                      {item.name}
-                    </h3>
-
-                    <p className="text-xs text-default-400 leading-relaxed line-clamp-2 min-h-[36px]">
-                      {item.description}
-                    </p>
-
-                    <div className="flex items-center justify-center gap-1 pt-1">
-                      {item.categoryTags.map((tag) => (
-                        <Chip key={tag} variant="soft" color="accent" size="sm">
-                          {tag}
-                        </Chip>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )
-            })}
-          </div>
-        </div>
-      ))}
-
-      {selectedIntegration && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-150">
-          <Card className="w-full max-w-3xl bg-background border border-divider shadow-2xl overflow-hidden">
-            <div className="px-6 py-4 border-b border-divider flex items-center justify-between">
-              <span className="text-sm font-bold text-foreground">Configure {selectedIntegration.name} Integration</span>
-              <Button variant="ghost" size="sm" isIconOnly onPress={() => setSelectedIntegration(null)}>✕</Button>
-            </div>
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-6 min-h-[360px]">
-                {/* Left Side: Test Console */}
-                <div className="md:col-span-5 bg-default-50 border border-divider rounded-large p-4 flex flex-col justify-between space-y-4">
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <Sparkles className="size-4 text-blue-500" />
-                      <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">
-                        Test {selectedIntegration.name}
-                      </h3>
-                    </div>
-
-                    <p className="text-xs text-default-400 leading-relaxed">
-                      Execute a live connection test to verify credentials & endpoint latency before activating this integration.
-                    </p>
-
-                    {testResult && (
-                      <div
-                        className={`p-3 rounded-medium border text-xs font-medium flex items-start gap-2 ${
-                          testResult.success
-                            ? "bg-success-50/50 text-success-700 border-success-200"
-                            : "bg-danger-50/50 text-danger-700 border-danger-200"
-                        }`}
-                      >
-                        {testResult.success ? (
-                          <CheckCircle2 className="size-4 shrink-0 text-success-500 mt-0.5" />
-                        ) : (
-                          <AlertCircle className="size-4 shrink-0 text-danger-500 mt-0.5" />
-                        )}
-                        <div>
-                          <div className="font-bold">{testResult.text}</div>
+                {/* Expanded Inline Accordion Details */}
+                {isExpanded && (
+                  <div className="p-5 border-t border-divider bg-default-50/50 space-y-4 animate-in slide-in-from-top-1 duration-150">
+                    <form onSubmit={(e) => handleSaveCredentials(item, e)} className="space-y-4">
+                      {item.fields.length > 0 ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          {item.fields.map((f) => (
+                            <div key={f.key} className="flex flex-col gap-1.5">
+                              <span className="text-xs font-semibold text-foreground">{f.label}</span>
+                              <Input
+                                placeholder={f.placeholder}
+                                value={formValues[f.key] || ""}
+                                onChange={(e) => setFormValues({ ...formValues, [f.key]: e.target.value })}
+                              />
+                            </div>
+                          ))}
                         </div>
+                      ) : (
+                        <div className="p-3 bg-card border border-divider rounded-xl text-xs text-default-500 flex items-center gap-2">
+                          <Cpu className="size-4 text-default-400 shrink-0" />
+                          <span>Built-in background engine — no external API credentials required. Use toggle switch above to control status.</span>
+                        </div>
+                      )}
+
+                      {/* Diagnostic Test Output Alert */}
+                      {testResult[item.id] && (
+                        <div
+                          className={`p-3 rounded-xl border text-xs font-medium flex items-start gap-2 ${
+                            testResult[item.id].success
+                              ? "bg-success-50/70 text-success-700 border-success-200 dark:bg-success-950/40 dark:border-success-800 dark:text-success-300"
+                              : "bg-danger-50/70 text-danger-700 border-danger-200 dark:bg-danger-950/40 dark:border-danger-800 dark:text-danger-300"
+                          }`}
+                        >
+                          {testResult[item.id].success ? (
+                            <CheckCircle2 className="size-4 shrink-0 text-success-500 mt-0.5" />
+                          ) : (
+                            <AlertCircle className="size-4 shrink-0 text-danger-500 mt-0.5" />
+                          )}
+                          <div className="font-semibold">{testResult[item.id].text}</div>
+                        </div>
+                      )}
+
+                      {/* Clean Aligned Action Row */}
+                      <div className="flex items-center justify-end gap-3 pt-3 border-t border-divider">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          isDisabled={testingId === item.id}
+                          onPress={() => handleRunDiagnosticTest(item)}
+                        >
+                          {testingId === item.id ? (
+                            <>
+                              <Loader2 className="size-4 animate-spin mr-1.5" /> Testing...
+                            </>
+                          ) : (
+                            <>
+                              <Play className="size-4 mr-1.5 text-success-500" /> Test Connection
+                            </>
+                          )}
+                        </Button>
+
+                        <Button type="submit" isDisabled={submittingId === item.id}>
+                          {submittingId === item.id ? "Activating..." : isActive ? "Save Settings" : "Activate"}
+                        </Button>
                       </div>
-                    )}
+                    </form>
                   </div>
-
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full justify-center"
-                    isDisabled={testing}
-                    onPress={handleRunTest}
-                  >
-                    {testing ? (
-                      <>
-                        <Loader2 className="size-3.5 animate-spin mr-1.5" /> Testing Connection...
-                      </>
-                    ) : (
-                      <>
-                        <Play className="size-3.5 mr-1.5 text-success-500" /> Run Diagnostic Test
-                      </>
-                    )}
-                  </Button>
-                </div>
-
-                {/* Right Side: Credential Form */}
-                <div className="md:col-span-7 space-y-4">
-                  <form id="integration-form" onSubmit={handleSaveAPIKey} className="space-y-4">
-                    {selectedIntegration.fields.map((f: any) => (
-                      <div key={f.key} className="space-y-1.5">
-                        <label className="text-xs font-bold text-foreground">{f.label}</label>
-                        <Input
-                          type={f.type === "password" && !showSecret[f.key] ? "password" : "text"}
-                          placeholder={f.placeholder}
-                          value={formValues[f.key] || ""}
-                          onChange={(e) => setFormValues({ ...formValues, [f.key]: e.target.value })}
-                        />
-                      </div>
-                    ))}
-                  </form>
-                </div>
-              </div>
-            </div>
-
-            <div className="px-6 py-3 border-t border-divider flex items-center justify-end gap-2 bg-default-50">
-              <Button variant="outline" size="sm" onPress={() => setSelectedIntegration(null)}>
-                Cancel
-              </Button>
-              <Button type="submit" form="integration-form" size="sm" isDisabled={submitting}>
-                {submitting ? "Saving..." : "Save & Activate"}
-              </Button>
-            </div>
-          </Card>
-        </div>
-      )}
+                )}
+              </Card>
+            )
+          })
+        )}
+      </div>
     </div>
   )
 }
