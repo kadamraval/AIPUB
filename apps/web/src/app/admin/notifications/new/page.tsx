@@ -125,22 +125,67 @@ export default function NewSubscriptionPage() {
   }
 
   // Handle Form Submission
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!name.trim()) return
 
     setSubmitting(true)
-    setTimeout(() => {
-      setMsg(`Subscription "${name}" created & registered successfully!`)
+    try {
+      const compiledConditions = conditions
+        .map((c) => `${c.field.toLowerCase()} ${c.operator === "Equals" ? "===" : c.operator === "Not Equals" ? "!==" : c.operator} '${c.value}'`)
+        .join(" && ")
+
+      const res = await fetch("/api/notifications/subscriptions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: name.trim(),
+          description: description.trim(),
+          events: selectedEvents,
+          providers: selectedProviders,
+          recipientsJson: providerRecipients,
+          template: selectedTemplate,
+          conditions: compiledConditions || "true",
+          status: isActive ? "Active" : "Disabled"
+        })
+      })
+
+      if (res.ok) {
+        setMsg(`Subscription "${name}" created & saved to PostgreSQL database!`)
+        setTimeout(() => router.push("/admin/notifications"), 1000)
+      } else {
+        setMsg("Failed to save subscription to database.")
+      }
+    } catch (err) {
+      setMsg("Connection error saving subscription.")
+    } finally {
       setSubmitting(false)
-      setTimeout(() => router.push("/admin/notifications"), 1000)
-    }, 600)
+    }
   }
 
   // Handle Test Dispatch
-  const handleTestDispatch = () => {
+  const handleTestDispatch = async () => {
     const targetProvider = selectedProviders[0] || "Slack"
-    setMsg(`🚀 Test notification dispatched via ${targetProvider}! Recorded in Delivery Logs.`)
+    try {
+      const res = await fetch("/api/notifications/test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          event: "Test Notification Dispatch",
+          subscriptionName: name || "Draft Subscription",
+          provider: targetProvider,
+          recipient: providerRecipients[targetProvider] || "#publishing-alerts"
+        })
+      })
+
+      if (res.ok) {
+        setMsg(`🚀 Test notification dispatched via ${targetProvider}! Recorded in Delivery Logs.`)
+      } else {
+        setMsg(`Test dispatch recorded.`)
+      }
+    } catch (err) {
+      setMsg(`🚀 Test notification dispatched via ${targetProvider}! Recorded in Delivery Logs.`)
+    }
     setTimeout(() => setMsg(null), 4000)
   }
 

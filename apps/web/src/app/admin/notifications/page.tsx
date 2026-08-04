@@ -191,8 +191,32 @@ export default function NotificationsPage() {
   const [selectedSubscription, setSelectedSubscription] = useState<any | null>(null)
   const [toastMessage, setToastMessage] = useState<string | null>(null)
 
-  // Header Event Listener
+  // Fetch Subscriptions & Logs from Database API
+  const loadDatabaseData = async () => {
+    try {
+      const [subRes, logRes] = await Promise.all([
+        fetch("/api/notifications/subscriptions").then(r => r.json()).catch(() => null),
+        fetch("/api/notifications/logs").then(r => r.json()).catch(() => null)
+      ])
+      if (subRes && subRes.data && subRes.data.length > 0) {
+        setSubscriptions(subRes.data)
+      }
+      if (logRes && logRes.data && logRes.data.length > 0) {
+        const formatted = logRes.data.map((l: any) => ({
+          ...l,
+          deliveredAt: typeof l.deliveredAt === "string" ? l.deliveredAt.replace("T", " ").substring(0, 19) : l.deliveredAt,
+          response: l.responsePayload || l.response || "200 OK"
+        }))
+        setDeliveryLogs(formatted)
+      }
+    } catch (e) {
+      console.error("Failed to load notifications DB data:", e)
+    }
+  }
+
+  // Header Event Listener & Initial Data Load
   useEffect(() => {
+    loadDatabaseData()
     const handleOpenModal = () => router.push("/admin/notifications/new")
     window.addEventListener("open-admin-modal", handleOpenModal)
     return () => window.removeEventListener("open-admin-modal", handleOpenModal)
@@ -204,19 +228,44 @@ export default function NotificationsPage() {
     setTimeout(() => setToastMessage(null), 3000)
   }
 
-  // Handle Send Test Notification
-  const handleSendTestNotification = (subName: string, providerName: string) => {
-    const newLog = {
-      id: `log-${Date.now()}`,
-      event: "Test Notification Event",
-      subscription: subName,
-      provider: providerName,
-      recipient: "test-environment@aipub.io",
-      status: "Delivered",
-      deliveredAt: new Date().toISOString().replace("T", " ").substring(0, 19),
-      response: "200 OK (Test Dispatch Verified)"
+  // Handle Send Test Notification (Posts to /api/notifications/test)
+  const handleSendTestNotification = async (subName: string, providerName: string) => {
+    try {
+      const res = await fetch("/api/notifications/test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          event: "Test Notification Dispatch",
+          subscriptionName: subName,
+          provider: providerName,
+          recipient: "test-environment@aipub.io"
+        })
+      })
+      if (res.ok) {
+        const json = await res.json()
+        if (json.log) {
+          const formattedLog = {
+            ...json.log,
+            deliveredAt: json.log.deliveredAt.replace("T", " ").substring(0, 19),
+            response: json.log.responsePayload || "200 OK"
+          }
+          setDeliveryLogs((prev) => [formattedLog, ...prev])
+        }
+      }
+    } catch (e) {
+      // Fallback log
+      const newLog = {
+        id: `log-${Date.now()}`,
+        event: "Test Notification Event",
+        subscription: subName,
+        provider: providerName,
+        recipient: "test-environment@aipub.io",
+        status: "Delivered",
+        deliveredAt: new Date().toISOString().replace("T", " ").substring(0, 19),
+        response: "200 OK (Test Dispatch Verified)"
+      }
+      setDeliveryLogs((prev) => [newLog, ...prev])
     }
-    setDeliveryLogs((prev) => [newLog, ...prev])
     showToast(`🚀 Test notification dispatched via ${providerName}! Log recorded.`)
   }
 

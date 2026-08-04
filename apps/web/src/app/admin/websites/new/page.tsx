@@ -280,17 +280,67 @@ export default function NewWebsitePage() {
   const filteredLanguages = FULL_LANGUAGES.filter((l) => l.toLowerCase().includes(langSearch.toLowerCase()))
   const filteredCountries = FULL_COUNTRIES.filter((c) => c.toLowerCase().includes(countrySearch.toLowerCase()))
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!websiteName.trim() || !domain.trim()) return
 
     setSubmitting(true)
+    try {
+      const res = await fetch("/api/websites", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          websiteName: websiteName.trim(),
+          domain: domain.trim(),
+          description: description.trim(),
+          status,
+          timezone,
+          language,
+          country,
+          brandVoice,
+          writingStyleRich,
+          targetAudiences,
+          tone,
+          expertiseLevel,
+          brandGuidelines,
+          customInstructions,
+          selectedCms,
+          cmsCredentials,
+          slugFormat,
+          comments,
+          pingSearchEngines,
+          categories,
+          topics,
+          contentType,
+          contentLength,
+          restrictedTopics,
+          includeKeywords,
+          excludeKeywords,
+          contentGuidelines,
+          selectedWorkflow,
+          approvalMode,
+          notificationWorkflow,
+          seoPlugin,
+          metaTitleTemplate,
+          metaDescTemplate,
+          robots,
+          canonicalUrl,
+          openGraph,
+          twitterCard
+        })
+      })
 
-    setTimeout(() => {
-      setMsg(`Website property "${websiteName}" created & configured successfully!`)
+      if (res.ok) {
+        setMsg(`Website property "${websiteName}" created & saved to PostgreSQL database!`)
+        setTimeout(() => router.push("/admin/websites"), 1000)
+      } else {
+        setMsg(`Error saving website property to database.`)
+      }
+    } catch (err) {
+      setMsg(`Failed to connect to database service.`)
+    } finally {
       setSubmitting(false)
-      setTimeout(() => router.push("/admin/websites"), 1000)
-    }, 600)
+    }
   }
 
   return (

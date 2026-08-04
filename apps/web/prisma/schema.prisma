@@ -222,7 +222,37 @@ model NotificationSubscription {
 }
 
 // ==========================================
-// 10. NOTIFICATION LOGS (notification_logs table)
+// 10. NOTIFICATION PROVIDERS (notification_providers table)
+// ==========================================
+model NotificationProvider {
+  id            String   @id @default(cuid())
+  name          String   @unique // Slack, Discord, Email (Resend), Webhook, API, MCP, Custom
+  type          String   @default("webhook")
+  credentials   Json?
+  status        String   @default("Active")
+  configuration Json?
+  createdAt     DateTime @default(now())
+
+  @@map("notification_providers")
+}
+
+// ==========================================
+// 11. NOTIFICATION TEMPLATES (notification_templates table)
+// ==========================================
+model NotificationTemplate {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  event     String   @default("All")
+  title     String
+  message   String   @db.Text
+  variables String[] // e.g. ["{{workflow.id}}", "{{workflow.status}}"]
+  createdAt DateTime @default(now())
+
+  @@map("notification_templates")
+}
+
+// ==========================================
+// 12. NOTIFICATION LOGS (notification_logs table)
 // ==========================================
 model NotificationLog {
   id              String                    @id @default(cuid())
@@ -239,7 +269,7 @@ model NotificationLog {
 }
 
 // ==========================================
-// 11. INTEGRATIONS (integrations table)
+// 13. INTEGRATIONS (integrations table)
 // ==========================================
 model Integration {
   id           String    @id @default(cuid())

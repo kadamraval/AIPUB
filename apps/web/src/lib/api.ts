@@ -1,10 +1,11 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || ""
 
 export async function fetchWebsites() {
   try {
-    const res = await fetch(`${API_BASE_URL}/api/v1/websites/`, { cache: 'no-store' }).catch(() => null)
+    const res = await fetch("/api/websites", { cache: "no-store" }).catch(() => null)
     if (!res || !res.ok) return []
-    return await res.json()
+    const json = await res.json()
+    return json.data || []
   } catch (error) {
     return []
   }
@@ -80,9 +81,10 @@ export async function deleteWebsite(id: string) {
 // Custom Workflows Builder Blueprints
 export async function fetchWorkflows() {
   try {
-    const res = await fetch(`${API_BASE_URL}/api/v1/workflows/`, { cache: 'no-store' }).catch(() => null)
+    const res = await fetch("/api/workflows", { cache: "no-store" }).catch(() => null)
     if (!res || !res.ok) return []
-    return await res.json()
+    const json = await res.json()
+    return json.data || []
   } catch (error) {
     return []
   }
@@ -90,7 +92,7 @@ export async function fetchWorkflows() {
 
 export async function createWorkflow(data: { name: string; description: string; target_cms: string; steps: any[] }) {
   try {
-    const res = await fetch(`${API_BASE_URL}/api/v1/workflows/`, {
+    const res = await fetch("/api/workflows", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data)
@@ -251,9 +253,10 @@ export const createApiKey = createIntegration
 // Custom Agents & Skills
 export async function fetchCustomAgents() {
   try {
-    const res = await fetch(`${API_BASE_URL}/api/v1/custom-agents/`, { cache: 'no-store' }).catch(() => null)
+    const res = await fetch("/api/agents", { cache: "no-store" }).catch(() => null)
     if (!res || !res.ok) return []
-    return await res.json()
+    const json = await res.json()
+    return json.data || []
   } catch (error) {
     console.error("API Error (Fetch Custom Agents):", error)
     return []
@@ -262,7 +265,7 @@ export async function fetchCustomAgents() {
 
 export async function createCustomAgent(data: { name: string; role_description: string; skills: any[]; permitted_integrations?: string[]; permitted_sources?: string[]; system_prompt: string }) {
   try {
-    const res = await fetch(`${API_BASE_URL}/api/v1/custom-agents/`, {
+    const res = await fetch("/api/agents", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data)
@@ -303,10 +306,11 @@ export async function deleteCustomAgent(id: string) {
 
 export async function fetchArticles(status?: string) {
   try {
-    const url = status ? `${API_BASE_URL}/api/v1/articles/?status=${status}` : `${API_BASE_URL}/api/v1/articles/`
+    const url = status ? `/api/articles?status=${status}` : "/api/articles"
     const res = await fetch(url, { cache: 'no-store' }).catch(() => null)
     if (!res || !res.ok) return []
-    return await res.json()
+    const json = await res.json()
+    return json.data || []
   } catch (error) {
     console.error("API Error (Articles):", error)
     return []
