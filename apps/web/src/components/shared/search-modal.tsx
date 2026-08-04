@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Modal } from "@heroui/react"
 import {
-  Search, LayoutDashboard, Globe, Rss, Bot, GitBranch, LineChart, FileText, Image as ImageIcon, Puzzle, Mail, Settings, Plus, Sparkles, Database, FileCode
+  Search, LayoutDashboard, Globe, Rss, Bot, GitBranch, LineChart, FileText, Image as ImageIcon, Folder, Puzzle, Mail, Settings, Plus, Sparkles, Database, FileCode
 } from "lucide-react"
 import { fetchArticles, fetchWebsites, fetchSources, fetchCustomAgents, fetchWorkflows } from "@/lib/api"
 
@@ -54,7 +54,7 @@ export function SearchModal() {
           { id: "nav-wf", name: "Publishing Workflows", sub: "/admin/workflows", href: "/admin/workflows", category: "Navigation", icon: GitBranch },
           { id: "nav-ana", name: "Traffic Analytics", sub: "/admin/analytics", href: "/admin/analytics", category: "Navigation", icon: LineChart },
           { id: "nav-art", name: "Articles Directory", sub: "/admin/articles", href: "/admin/articles", category: "Navigation", icon: FileText },
-          { id: "nav-med", name: "Media Assets", sub: "/admin/media", category: "Navigation", href: "/admin/media", icon: ImageIcon },
+          { id: "nav-files", name: "Files Directory", sub: "/admin/files", category: "Navigation", href: "/admin/files", icon: Folder },
           { id: "nav-int", name: "API Integrations", sub: "/admin/integrations", category: "Navigation", href: "/admin/integrations", icon: Puzzle },
           { id: "nav-nws", name: "Newsletters Automation", sub: "/admin/newsletters", category: "Navigation", href: "/admin/newsletters", icon: Mail },
           { id: "nav-set", name: "Platform Settings", sub: "/admin/settings", category: "Navigation", href: "/admin/settings", icon: Settings },

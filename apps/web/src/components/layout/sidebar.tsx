@@ -12,7 +12,7 @@ import {
   LineChart,
   FileText,
   Search,
-  Image as ImageIcon,
+  Folder,
   Puzzle,
   Mail,
   Settings,
@@ -40,7 +40,7 @@ const navigationGroup1 = [
 
 const navigationGroup2 = [
   { name: "Articles", href: "/admin/articles", icon: FileText },
-  { name: "Media", href: "/admin/media", icon: ImageIcon },
+  { name: "Files", href: "/admin/files", icon: Folder },
 ]
 
 const navigationGroup3 = [
@@ -127,15 +127,11 @@ export function Sidebar() {
           </div>
         )}
 
-        {isCollapsed && (
-          <div className="h-7 w-7 rounded-medium bg-foreground text-background flex items-center justify-center font-bold text-sm mx-auto">
-            AI
-          </div>
-        )}
-
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="h-7 w-7 rounded-medium border border-divider flex items-center justify-center text-default-400 hover:text-foreground hover:bg-default-100 transition-colors"
+          className={`h-7 w-7 rounded-medium border border-divider flex items-center justify-center text-default-400 hover:text-foreground hover:bg-default-100 transition-colors ${
+            isCollapsed ? "mx-auto" : ""
+          }`}
           title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
         >
           {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
@@ -143,11 +139,11 @@ export function Sidebar() {
       </div>
 
       {/* Search & Theme Toggle above Dashboard */}
-      <div className="p-2 border-b border-divider flex items-center gap-1.5">
+      <div className={`p-2 border-b border-divider flex items-center gap-1.5 ${isCollapsed ? "flex-col justify-center" : "flex-row"}`}>
         <button
           onClick={() => window.dispatchEvent(new CustomEvent("open-search-modal"))}
-          className={`flex-1 flex items-center justify-between gap-2 px-3 py-1.5 rounded-medium border border-divider bg-background text-default-400 text-xs hover:text-foreground hover:bg-default-100 transition-colors ${
-            isCollapsed ? "justify-center px-0" : ""
+          className={`flex items-center gap-2 rounded-medium border border-divider bg-background text-default-400 text-xs hover:text-foreground hover:bg-default-100 transition-colors ${
+            isCollapsed ? "h-8 w-8 justify-center px-0 shrink-0" : "flex-1 justify-between px-3 py-1.5"
           }`}
           title="Search (Ctrl+K)"
         >
