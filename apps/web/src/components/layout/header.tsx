@@ -16,7 +16,7 @@ const pageTitleMap: Record<string, { title: string; info: string }> = {
   "/admin/articles": { title: "Articles", info: "Article library, live posts, and draft management" },
   "/admin/files": { title: "Files", info: "Manage website root folders, subdirectories & file assets" },
   "/admin/integrations": { title: "Integration", info: "API connections: WordPress, fal.ai, OpenAI, Google News" },
-  "/admin/newsletters": { title: "Newsletter", info: "Email newsletter automation & subscriber campaigns" },
+  "/admin/notifications": { title: "Notifications", info: "Event-driven system delivering alerts across Resend, Slack, Discord, Webhook, API & MCP" },
   "/admin/settings": { title: "Settings", info: "Platform settings, organization profiles & system preferences" }
 }
 
@@ -228,6 +228,12 @@ export function Header() {
         {pathname.startsWith("/admin/integrations") && (
           <Button size="sm" onPress={handleOpenModal}>
             <Plus className="size-3.5" /> Add Integration
+          </Button>
+        )}
+
+        {pathname === "/admin/notifications" && (
+          <Button size="sm" onPress={() => router.push("/admin/notifications/new")}>
+            <Plus className="size-3.5" /> Create Subscription
           </Button>
         )}
 

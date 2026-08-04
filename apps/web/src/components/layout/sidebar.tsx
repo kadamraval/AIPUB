@@ -14,7 +14,7 @@ import {
   Search,
   Folder,
   Puzzle,
-  Mail,
+  Bell,
   Settings,
   ChevronLeft,
   ChevronRight,
@@ -45,7 +45,7 @@ const navigationGroup2 = [
 
 const navigationGroup3 = [
   { name: "Integration", href: "/admin/integrations", icon: Puzzle },
-  { name: "Newsletter", href: "/admin/newsletters", icon: Mail },
+  { name: "Notifications", href: "/admin/notifications", icon: Bell },
   { name: "Settings", href: "/admin/settings", icon: Settings },
 ]
 

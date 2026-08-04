@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Modal } from "@heroui/react"
 import {
-  Search, LayoutDashboard, Globe, Rss, Bot, GitBranch, LineChart, FileText, Image as ImageIcon, Folder, Puzzle, Mail, Settings, Plus, Sparkles, Database, FileCode
+  Search, LayoutDashboard, Globe, Rss, Bot, GitBranch, LineChart, FileText, Image as ImageIcon, Folder, Puzzle, Bell, Settings, Plus, Sparkles, Database, FileCode
 } from "lucide-react"
 import { fetchArticles, fetchWebsites, fetchSources, fetchCustomAgents, fetchWorkflows } from "@/lib/api"
 
@@ -56,7 +56,7 @@ export function SearchModal() {
           { id: "nav-art", name: "Articles Directory", sub: "/admin/articles", href: "/admin/articles", category: "Navigation", icon: FileText },
           { id: "nav-files", name: "Files Directory", sub: "/admin/files", category: "Navigation", href: "/admin/files", icon: Folder },
           { id: "nav-int", name: "API Integrations", sub: "/admin/integrations", category: "Navigation", href: "/admin/integrations", icon: Puzzle },
-          { id: "nav-nws", name: "Newsletters Automation", sub: "/admin/newsletters", category: "Navigation", href: "/admin/newsletters", icon: Mail },
+          { id: "nav-ntf", name: "Notifications & Subscriptions", sub: "/admin/notifications", category: "Navigation", href: "/admin/notifications", icon: Bell },
           { id: "nav-set", name: "Platform Settings", sub: "/admin/settings", category: "Navigation", href: "/admin/settings", icon: Settings },
           { id: "act-new-art", name: "Create New Article", sub: "Open Rich Text Editor", href: "/admin/articles/new", category: "Action", icon: Plus }
         )
