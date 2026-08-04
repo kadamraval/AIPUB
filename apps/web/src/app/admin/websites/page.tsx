@@ -9,6 +9,7 @@ import { TablePagination } from "@/components/shared/table-pagination"
 
 import {
   Card,
+  CardHeader,
   CardContent,
   Button,
   Chip,
@@ -16,12 +17,6 @@ import {
   Select,
   ListBox,
   Table,
-  TableContent,
-  TableHeader,
-  TableColumn,
-  TableBody,
-  TableRow,
-  TableCell,
 } from "@heroui/react"
 import {
   Globe,
@@ -32,14 +27,11 @@ import {
   Pause,
   Trash2,
   CheckCircle2,
-  ArrowUpDown,
-  Download,
-  ChevronLeft,
-  ChevronRight,
   ExternalLink,
   Layers,
   FileText,
-  Users
+  Users,
+  Sparkles
 } from "lucide-react"
 import { fetchWebsites, toggleWebsiteStatus, deleteWebsite } from "@/lib/api"
 
@@ -88,6 +80,7 @@ export default function WebsitesPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [cmsFilter, setCmsFilter] = useState<string>("all")
+  const [displayMode, setDisplayMode] = useState<"table" | "grid">("table")
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [msg, setMsg] = useState<string | null>(null)
 
@@ -130,10 +123,6 @@ export default function WebsitesPage() {
     setTimeout(() => setMsg(null), 3000)
   }
 
-  const handleSort = (field: string) => {
-    if (sortField === field) { setSortAsc(!sortAsc) } else { setSortField(field); setSortAsc(true) }
-  }
-
   const handleBulkDelete = async () => {
     if (selectedIds.size === 0) return
     if (!confirm(`Are you sure you want to delete ${selectedIds.size} selected site(s)?`)) return
@@ -153,34 +142,9 @@ export default function WebsitesPage() {
       const matchesCms = cmsFilter === "all" || site.cms_type === cmsFilter
       return matchesSearch && matchesStatus && matchesCms
     })
-    .sort((a, b) => {
-      let valA = a[sortField] || ""
-      let valB = b[sortField] || ""
-      if (typeof valA === "string") valA = valA.toLowerCase()
-      if (typeof valB === "string") valB = valB.toLowerCase()
-      if (valA < valB) return sortAsc ? -1 : 1
-      if (valA > valB) return sortAsc ? 1 : -1
-      return 0
-    })
 
   const totalPages = Math.ceil(filteredAndSortedWebsites.length / pageSize) || 1
   const paginatedWebsites = filteredAndSortedWebsites.slice((currentPage - 1) * pageSize, currentPage * pageSize)
-
-  const allSelected = paginatedWebsites.length > 0 && paginatedWebsites.every((w) => selectedIds.has(w.id))
-
-  const toggleSelectAll = (checked: boolean) => {
-    if (checked) {
-      setSelectedIds(new Set(filteredAndSortedWebsites.map((w) => w.id)))
-    } else {
-      setSelectedIds(new Set())
-    }
-  }
-
-  const toggleSelectRow = (id: string) => {
-    const next = new Set(selectedIds)
-    if (next.has(id)) { next.delete(id) } else { next.add(id) }
-    setSelectedIds(next)
-  }
 
   return (
     <div className="space-y-6">
@@ -195,10 +159,12 @@ export default function WebsitesPage() {
         searchQuery={searchQuery}
         onSearchChange={(val) => { setSearchQuery(val); setCurrentPage(1) }}
         searchPlaceholder="Search by property name, domain, or CMS..."
+        displayMode={displayMode}
+        onDisplayModeChange={(mode) => setDisplayMode(mode as "table" | "grid")}
         actions={
           selectedIds.size > 0 ? (
-            <Button size="sm" onPress={handleBulkDelete}><Trash2 className="size-4"  /> 
-              Delete ({selectedIds.size})
+            <Button size="sm" onPress={handleBulkDelete}>
+              <Trash2 className="size-4" /> Delete ({selectedIds.size})
             </Button>
           ) : undefined
         }
@@ -252,111 +218,205 @@ export default function WebsitesPage() {
         }
       />
 
-      <div className="space-y-3">
-        <Table>
-          <Table.ScrollContainer>
-            <Table.Content
-              aria-label="Websites table"
-              selectedKeys={selectedIds as any}
-              selectionMode="multiple"
-              onSelectionChange={(keys) => {
-                if (keys === "all") {
-                  setSelectedIds(new Set(filteredAndSortedWebsites.map((w) => w.id)))
-                } else {
-                  setSelectedIds(new Set(Array.from(keys) as string[]))
-                }
-              }}
-            >
-              <Table.Header>
-                <Table.Column className="pe-0">
-                  <Checkbox aria-label="Select all websites" slot="selection">
-                    <Checkbox.Content>
-                      <Checkbox.Control>
-                        <Checkbox.Indicator />
-                      </Checkbox.Control>
-                    </Checkbox.Content>
-                  </Checkbox>
-                </Table.Column>
-                <Table.Column isRowHeader>Website</Table.Column>
-                <Table.Column>Domain</Table.Column>
-                <Table.Column>Workflow</Table.Column>
-                <Table.Column>Language</Table.Column>
-                <Table.Column>Status</Table.Column>
-                <Table.Column>Updated</Table.Column>
-                <Table.Column className="text-right">Actions</Table.Column>
-              </Table.Header>
-              <Table.Body items={paginatedWebsites}>
-                {(w: any) => (
-                  <Table.Row key={w.id} id={w.id}>
-                    <Table.Cell className="pe-0">
-                      <Checkbox aria-label={`Select ${w.name}`} slot="selection">
-                        <Checkbox.Content>
-                          <Checkbox.Control>
-                            <Checkbox.Indicator />
-                          </Checkbox.Control>
-                        </Checkbox.Content>
-                      </Checkbox>
-                    </Table.Cell>
-
-                    <Table.Cell>
-                      <div className="flex items-center gap-3">
-                        <div className="size-8 rounded-medium bg-content1 border border-divider flex items-center justify-center font-bold text-xs text-foreground shrink-0">{(w.name || "W").charAt(0)}</div>
-                        <div>
-                          <div className="font-bold text-xs">{w.name}</div>
-                          <span className="text-[11px] text-default-400">{w.cms_type || "WordPress"}</span>
-                        </div>
-                      </div>
-                    </Table.Cell>
-
-                    <Table.Cell>
-                      <a href={`https://${w.domain}`} target="_blank" rel="noreferrer" className="hover:underline flex items-center gap-1.5 text-xs">
-                        {w.domain} <ExternalLink className="size-3 text-default-400" />
+      {displayMode === "grid" ? (
+        /* GRID SYSTEM VIEW */
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {paginatedWebsites.map((w: any) => (
+              <Card
+                key={w.id}
+                className="bg-content1 border border-divider hover:border-accent-500/50 hover:shadow-md transition-all rounded-2xl overflow-hidden flex flex-col"
+              >
+                <CardHeader className="p-5 pb-3 border-b border-divider/60 flex items-center justify-between bg-content2/30">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="size-10 rounded-xl bg-accent-500/10 border border-accent-500/20 text-accent-500 font-black text-sm flex items-center justify-center shrink-0">
+                      {(w.name || "W").charAt(0)}
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="font-bold text-sm text-foreground truncate">{w.name}</h3>
+                      <a
+                        href={`https://${w.domain}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xs text-default-400 hover:text-primary flex items-center gap-1 truncate"
+                      >
+                        {w.domain} <ExternalLink className="size-3" />
                       </a>
-                    </Table.Cell>
+                    </div>
+                  </div>
+                  <Chip variant="soft" color={w.status === "active" ? "success" : "default"} size="sm" className="font-bold text-[10px] uppercase">
+                    {w.status}
+                  </Chip>
+                </CardHeader>
 
-                    <Table.Cell>
-                      <Chip variant="soft" color="accent" size="sm">{w.workflow_name || "Autonomous Blueprint"}</Chip>
-                    </Table.Cell>
+                <CardContent className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                  <div className="space-y-2.5 text-xs">
+                    <div className="flex items-center justify-between text-default-500">
+                      <span className="font-medium flex items-center gap-1.5"><Layers className="size-3.5 text-accent-500" /> CMS Engine</span>
+                      <span className="font-bold text-foreground">{w.cms_type || "WordPress"}</span>
+                    </div>
 
-                    <Table.Cell>
-                      <span className="text-xs text-default-500 font-medium">English (US)</span>
-                    </Table.Cell>
-
-                    <Table.Cell>
-                      <Chip variant="soft" color={w.status === "active" ? "success" : "default"} size="sm">
-                        {w.status === "active" ? "Active" : "Stopped"}
+                    <div className="flex items-center justify-between text-default-500">
+                      <span className="font-medium flex items-center gap-1.5"><Sparkles className="size-3.5 text-primary" /> Workflow</span>
+                      <Chip variant="soft" color="accent" size="sm" className="text-[11px] font-medium max-w-[160px] truncate">
+                        {w.workflow_name || "Autonomous Blueprint"}
                       </Chip>
-                    </Table.Cell>
+                    </div>
 
-                    <Table.Cell className="text-xs text-default-400 font-mono">{w.last_published || "Just now"}</Table.Cell>
+                    <div className="grid grid-cols-2 gap-2 pt-2 border-t border-divider/40">
+                      <div className="p-2.5 rounded-xl bg-content2/50 border border-divider">
+                        <div className="text-[10px] text-default-400 uppercase font-bold">Articles</div>
+                        <div className="text-sm font-extrabold text-foreground">{w.articles}</div>
+                      </div>
+                      <div className="p-2.5 rounded-xl bg-content2/50 border border-divider">
+                        <div className="text-[10px] text-default-400 uppercase font-bold">Visitors</div>
+                        <div className="text-sm font-extrabold text-foreground">{w.visitors}</div>
+                      </div>
+                    </div>
+                  </div>
 
-                    <Table.Cell className="text-right">
-                      <TableRowActions
-                        id={w.id}
-                        name={w.name}
-                        onEdit={() => router.push(`/admin/websites/${w.id}`)}
-                        onDelete={() => handleDelete(w.id)}
-                        onView={() => router.push(`/admin/websites/${w.id}`)}
-                      />
-                    </Table.Cell>
-                  </Table.Row>
-                )}
-              </Table.Body>
-            </Table.Content>
-          </Table.ScrollContainer>
-        </Table>
+                  <div className="flex items-center gap-2 pt-1">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="flex-1 text-xs font-bold gap-1.5 bg-content2 border border-divider"
+                      onPress={() => router.push(`/admin/websites/${w.id}`)}
+                    >
+                      <Edit className="size-3.5" /> Manage Site
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      isIconOnly
+                      className="text-default-400 hover:text-danger hover:bg-danger/10 border border-divider"
+                      onPress={() => handleDelete(w.id)}
+                    >
+                      <Trash2 className="size-3.5" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
 
-        {/* Standardized Pagination Footer */}
-        <TablePagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          pageSize={pageSize}
-          totalItems={filteredAndSortedWebsites.length}
-          itemLabel="websites"
-          onPageChange={(p) => setCurrentPage(p)}
-          onPageSizeChange={(s) => { setPageSize(s); setCurrentPage(1); }}
-        />
-      </div>
+          <TablePagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            pageSize={pageSize}
+            totalItems={filteredAndSortedWebsites.length}
+            itemLabel="websites"
+            onPageChange={(p) => setCurrentPage(p)}
+            onPageSizeChange={(s) => { setPageSize(s); setCurrentPage(1); }}
+          />
+        </div>
+      ) : (
+        /* TABLE VIEW */
+        <div className="space-y-3">
+          <Table>
+            <Table.ScrollContainer>
+              <Table.Content
+                aria-label="Websites table"
+                selectedKeys={selectedIds as any}
+                selectionMode="multiple"
+                onSelectionChange={(keys) => {
+                  if (keys === "all") {
+                    setSelectedIds(new Set(filteredAndSortedWebsites.map((w) => w.id)))
+                  } else {
+                    setSelectedIds(new Set(Array.from(keys) as string[]))
+                  }
+                }}
+              >
+                <Table.Header>
+                  <Table.Column className="pe-0">
+                    <Checkbox aria-label="Select all websites" slot="selection">
+                      <Checkbox.Content>
+                        <Checkbox.Control>
+                          <Checkbox.Indicator />
+                        </Checkbox.Control>
+                      </Checkbox.Content>
+                    </Checkbox>
+                  </Table.Column>
+                  <Table.Column isRowHeader>Website</Table.Column>
+                  <Table.Column>Domain</Table.Column>
+                  <Table.Column>Workflow</Table.Column>
+                  <Table.Column>Language</Table.Column>
+                  <Table.Column>Status</Table.Column>
+                  <Table.Column>Updated</Table.Column>
+                  <Table.Column className="text-right">Actions</Table.Column>
+                </Table.Header>
+                <Table.Body items={paginatedWebsites}>
+                  {(w: any) => (
+                    <Table.Row key={w.id} id={w.id}>
+                      <Table.Cell className="pe-0">
+                        <Checkbox aria-label={`Select ${w.name}`} slot="selection">
+                          <Checkbox.Content>
+                            <Checkbox.Control>
+                              <Checkbox.Indicator />
+                            </Checkbox.Control>
+                          </Checkbox.Content>
+                        </Checkbox>
+                      </Table.Cell>
+
+                      <Table.Cell>
+                        <div className="flex items-center gap-3">
+                          <div className="size-8 rounded-medium bg-content1 border border-divider flex items-center justify-center font-bold text-xs text-foreground shrink-0">{(w.name || "W").charAt(0)}</div>
+                          <div>
+                            <div className="font-bold text-xs">{w.name}</div>
+                            <span className="text-[11px] text-default-400">{w.cms_type || "WordPress"}</span>
+                          </div>
+                        </div>
+                      </Table.Cell>
+
+                      <Table.Cell>
+                        <a href={`https://${w.domain}`} target="_blank" rel="noreferrer" className="hover:underline flex items-center gap-1.5 text-xs">
+                          {w.domain} <ExternalLink className="size-3 text-default-400" />
+                        </a>
+                      </Table.Cell>
+
+                      <Table.Cell>
+                        <Chip variant="soft" color="accent" size="sm">{w.workflow_name || "Autonomous Blueprint"}</Chip>
+                      </Table.Cell>
+
+                      <Table.Cell>
+                        <span className="text-xs text-default-500 font-medium">English (US)</span>
+                      </Table.Cell>
+
+                      <Table.Cell>
+                        <Chip variant="soft" color={w.status === "active" ? "success" : "default"} size="sm">
+                          {w.status === "active" ? "Active" : "Stopped"}
+                        </Chip>
+                      </Table.Cell>
+
+                      <Table.Cell className="text-xs text-default-400 font-mono">{w.last_published || "Just now"}</Table.Cell>
+
+                      <Table.Cell className="text-right">
+                        <TableRowActions
+                          id={w.id}
+                          name={w.name}
+                          onEdit={() => router.push(`/admin/websites/${w.id}`)}
+                          onDelete={() => handleDelete(w.id)}
+                          onView={() => router.push(`/admin/websites/${w.id}`)}
+                        />
+                      </Table.Cell>
+                    </Table.Row>
+                  )}
+                </Table.Body>
+              </Table.Content>
+            </Table.ScrollContainer>
+          </Table>
+
+          {/* Standardized Pagination Footer */}
+          <TablePagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            pageSize={pageSize}
+            totalItems={filteredAndSortedWebsites.length}
+            itemLabel="websites"
+            onPageChange={(p) => setCurrentPage(p)}
+            onPageSizeChange={(s) => { setPageSize(s); setCurrentPage(1); }}
+          />
+        </div>
+      )}
     </div>
   )
 }

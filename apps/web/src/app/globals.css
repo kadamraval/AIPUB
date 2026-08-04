@@ -170,6 +170,7 @@ select:focus {
 /* ══════════════════════════════════════════════════════════════════════ */
 
 /* Placeholder */
+.tiptap-editor .ProseMirror p.is-editor-empty:first-child::before,
 .tiptap-editor .tiptap p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
   float: left;
@@ -180,48 +181,59 @@ select:focus {
 }
 
 /* Base prose typography */
+.tiptap-editor .ProseMirror,
 .tiptap-editor .tiptap {
   outline: none;
   font-size: 0.9375rem;
   line-height: 1.75;
   color: var(--foreground);
   /* CRITICAL: must explicitly allow text selection */
-  user-select: text;
-  -webkit-user-select: text;
-  cursor: text;
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  cursor: text !important;
+  min-height: 550px;
 }
 
+/* High-contrast vivid text selection highlight */
+.tiptap-editor ::selection,
+.tiptap-editor .ProseMirror ::selection,
+.tiptap-editor .tiptap ::selection {
+  background-color: #2563eb !important;
+  color: #ffffff !important;
+}
+
+.tiptap-editor .ProseMirror > * + *,
 .tiptap-editor .tiptap > * + * { margin-top: 0.75em; }
 
 /* Headings */
-.tiptap-editor .tiptap h1 { font-size: 2rem; font-weight: 800; line-height: 1.2; margin-top: 1.5rem; margin-bottom: 0.5rem; }
-.tiptap-editor .tiptap h2 { font-size: 1.5rem; font-weight: 700; line-height: 1.3; margin-top: 1.25rem; margin-bottom: 0.4rem; }
-.tiptap-editor .tiptap h3 { font-size: 1.25rem; font-weight: 700; line-height: 1.4; margin-top: 1rem; margin-bottom: 0.35rem; }
-.tiptap-editor .tiptap h4 { font-size: 1.1rem; font-weight: 600; line-height: 1.5; margin-top: 0.85rem; margin-bottom: 0.3rem; }
+.tiptap-editor .ProseMirror h1, .tiptap-editor .tiptap h1 { font-size: 2rem; font-weight: 800; line-height: 1.2; margin-top: 1.5rem; margin-bottom: 0.5rem; }
+.tiptap-editor .ProseMirror h2, .tiptap-editor .tiptap h2 { font-size: 1.5rem; font-weight: 700; line-height: 1.3; margin-top: 1.25rem; margin-bottom: 0.4rem; }
+.tiptap-editor .ProseMirror h3, .tiptap-editor .tiptap h3 { font-size: 1.25rem; font-weight: 700; line-height: 1.4; margin-top: 1rem; margin-bottom: 0.35rem; }
+.tiptap-editor .ProseMirror h4, .tiptap-editor .tiptap h4 { font-size: 1.1rem; font-weight: 600; line-height: 1.5; margin-top: 0.85rem; margin-bottom: 0.3rem; }
 
 /* Paragraph */
-.tiptap-editor .tiptap p { margin: 0.5em 0; }
+.tiptap-editor .ProseMirror p, .tiptap-editor .tiptap p { margin: 0.5em 0; }
 
 /* Bold / Italic / Underline / Strike */
-.tiptap-editor .tiptap strong { font-weight: 700; }
-.tiptap-editor .tiptap em { font-style: italic; }
-.tiptap-editor .tiptap u { text-decoration: underline; }
-.tiptap-editor .tiptap s { text-decoration: line-through; }
+.tiptap-editor .ProseMirror strong, .tiptap-editor .tiptap strong { font-weight: 700; }
+.tiptap-editor .ProseMirror em, .tiptap-editor .tiptap em { font-style: italic; }
+.tiptap-editor .ProseMirror u, .tiptap-editor .tiptap u { text-decoration: underline; }
+.tiptap-editor .ProseMirror s, .tiptap-editor .tiptap s { text-decoration: line-through; }
 
 /* Highlight */
-.tiptap-editor .tiptap mark { background-color: oklch(95% 0.15 90); padding: 0 2px; border-radius: 3px; }
+.tiptap-editor .ProseMirror mark, .tiptap-editor .tiptap mark { background-color: oklch(92% 0.18 95); padding: 0 4px; border-radius: 4px; color: #000; font-weight: 600; }
 
 /* Links */
-.tiptap-editor .tiptap a {
+.tiptap-editor .ProseMirror a, .tiptap-editor .tiptap a {
   color: var(--primary);
   text-decoration: underline;
   text-underline-offset: 2px;
   cursor: pointer;
 }
-.tiptap-editor .tiptap a:hover { opacity: 0.8; }
+.tiptap-editor .ProseMirror a:hover, .tiptap-editor .tiptap a:hover { opacity: 0.8; }
 
 /* Blockquote */
-.tiptap-editor .tiptap blockquote {
+.tiptap-editor .ProseMirror blockquote, .tiptap-editor .tiptap blockquote {
   border-left: 4px solid var(--primary);
   padding-left: 1rem;
   margin: 1rem 0;
@@ -233,21 +245,21 @@ select:focus {
 }
 
 /* Bullet / Ordered Lists */
-.tiptap-editor .tiptap ul { list-style-type: disc; padding-left: 1.5rem; margin: 0.5rem 0; }
-.tiptap-editor .tiptap ol { list-style-type: decimal; padding-left: 1.5rem; margin: 0.5rem 0; }
-.tiptap-editor .tiptap li { margin: 0.2rem 0; }
-.tiptap-editor .tiptap li p { margin: 0; }
+.tiptap-editor .ProseMirror ul, .tiptap-editor .tiptap ul { list-style-type: disc; padding-left: 1.5rem; margin: 0.5rem 0; }
+.tiptap-editor .ProseMirror ol, .tiptap-editor .tiptap ol { list-style-type: decimal; padding-left: 1.5rem; margin: 0.5rem 0; }
+.tiptap-editor .ProseMirror li, .tiptap-editor .tiptap li { margin: 0.2rem 0; }
+.tiptap-editor .ProseMirror li p, .tiptap-editor .tiptap li p { margin: 0; }
 
 /* Task List */
-.tiptap-editor .tiptap ul[data-type="taskList"] { list-style: none; padding-left: 0; }
-.tiptap-editor .tiptap ul[data-type="taskList"] li { display: flex; align-items: flex-start; gap: 0.5rem; margin: 0.25rem 0; }
-.tiptap-editor .tiptap ul[data-type="taskList"] li > label { margin-top: 2px; flex-shrink: 0; }
-.tiptap-editor .tiptap ul[data-type="taskList"] li > div { flex: 1; }
-.tiptap-editor .tiptap ul[data-type="taskList"] li[data-checked="true"] > div { opacity: 0.6; text-decoration: line-through; }
-.tiptap-editor .tiptap ul[data-type="taskList"] input[type="checkbox"] { width: 1rem; height: 1rem; cursor: pointer; accent-color: var(--primary); }
+.tiptap-editor .ProseMirror ul[data-type="taskList"], .tiptap-editor .tiptap ul[data-type="taskList"] { list-style: none; padding-left: 0; }
+.tiptap-editor .ProseMirror ul[data-type="taskList"] li, .tiptap-editor .tiptap ul[data-type="taskList"] li { display: flex; align-items: flex-start; gap: 0.5rem; margin: 0.25rem 0; }
+.tiptap-editor .ProseMirror ul[data-type="taskList"] li > label, .tiptap-editor .tiptap ul[data-type="taskList"] li > label { margin-top: 2px; flex-shrink: 0; }
+.tiptap-editor .ProseMirror ul[data-type="taskList"] li > div, .tiptap-editor .tiptap ul[data-type="taskList"] li > div { flex: 1; }
+.tiptap-editor .ProseMirror ul[data-type="taskList"] li[data-checked="true"] > div, .tiptap-editor .tiptap ul[data-type="taskList"] li[data-checked="true"] > div { opacity: 0.6; text-decoration: line-through; }
+.tiptap-editor .ProseMirror ul[data-type="taskList"] input[type="checkbox"], .tiptap-editor .tiptap ul[data-type="taskList"] input[type="checkbox"] { width: 1rem; height: 1rem; cursor: pointer; accent-color: var(--primary); }
 
 /* Inline Code */
-.tiptap-editor .tiptap code {
+.tiptap-editor .ProseMirror code, .tiptap-editor .tiptap code {
   background: var(--surface-secondary);
   border: 1px solid var(--border);
   border-radius: 4px;
@@ -256,6 +268,7 @@ select:focus {
   font-size: 0.875em;
   color: var(--danger);
 }
+
 
 /* Code Block */
 .tiptap-editor .tiptap pre {
@@ -296,30 +309,75 @@ select:focus {
   outline-offset: 2px;
 }
 
-/* Tables — WordPress Block Compatible */
+/* ══════════════════════════════════════════════════════════════════════ */
+/* TIPTAP RICH EDITOR TABLES — PREMIUM NOTION / GUTENBERG STYLING       */
+/* ══════════════════════════════════════════════════════════════════════ */
+
+.tiptap-editor .ProseMirror table,
 .tiptap-editor .tiptap table {
   width: 100%;
-  border-collapse: collapse;
-  margin: 1rem 0;
-  border-radius: 0.5rem;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 1.5rem 0;
+  border-radius: 1rem;
   overflow: hidden;
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04);
+  background: var(--surface);
 }
+
+.tiptap-editor .ProseMirror th,
 .tiptap-editor .tiptap th {
   background: var(--surface-secondary);
-  font-weight: 700;
+  color: var(--muted);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.75rem;
   text-align: left;
-  padding: 0.6rem 0.9rem;
-  border: 1px solid var(--border);
-  font-size: 0.875rem;
+  padding: 0.85rem 1.1rem;
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
 }
+
+.tiptap-editor .ProseMirror th:last-child,
+.tiptap-editor .tiptap th:last-child {
+  border-right: none;
+}
+
+.tiptap-editor .ProseMirror td,
 .tiptap-editor .tiptap td {
-  padding: 0.5rem 0.9rem;
-  border: 1px solid var(--border);
+  padding: 0.85rem 1.1rem;
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
   font-size: 0.875rem;
   vertical-align: top;
+  color: var(--foreground);
+  transition: background 0.15s ease;
 }
-.tiptap-editor .tiptap tr:nth-child(even) td { background: var(--surface-secondary); }
-.tiptap-editor .tiptap .selectedCell { background: oklch(70% 0.1 250 / 0.12) !important; }
+
+.tiptap-editor .ProseMirror td:last-child,
+.tiptap-editor .tiptap td:last-child {
+  border-right: none;
+}
+
+.tiptap-editor .ProseMirror tr:last-child td,
+.tiptap-editor .tiptap tr:last-child td {
+  border-bottom: none;
+}
+
+.tiptap-editor .ProseMirror tr:hover td,
+.tiptap-editor .tiptap tr:hover td {
+  background-color: var(--surface-secondary) !important;
+}
+
+.tiptap-editor .ProseMirror .selectedCell,
+.tiptap-editor .tiptap .selectedCell {
+  background-color: oklch(65% 0.2 250 / 0.18) !important;
+  border-color: var(--primary) !important;
+}
+
+.tiptap-editor .ProseMirror .column-resize-handle,
 .tiptap-editor .tiptap .column-resize-handle {
   background-color: var(--primary);
   bottom: 0;
@@ -329,8 +387,164 @@ select:focus {
   width: 4px;
   pointer-events: none;
 }
-.tiptap-editor .tiptap .tableWrapper { overflow-x: auto; }
+
+.tiptap-editor .ProseMirror .tableWrapper,
+.tiptap-editor .tiptap .tableWrapper { overflow-x: auto; margin: 1.5rem 0; }
+.tiptap-editor .ProseMirror.resize-cursor,
 .tiptap-editor .tiptap.resize-cursor { cursor: col-resize; }
+
+
+/* ══════════════════════════════════════════════════════════════════════ */
+/* ADVANCED INDUSTRY-STANDARD GRID & COLUMN LAYOUT SYSTEM                 */
+/* Gutenberg & Notion compatible flexible multi-column grid architecture  */
+/* ══════════════════════════════════════════════════════════════════════ */
+
+.grid-columns-wrapper,
+.tiptap-editor .ProseMirror [data-type="grid-block"],
+.tiptap-editor .tiptap [data-type="grid-block"],
+.wp-block-columns {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: stretch !important;
+  gap: 1.5rem !important;
+  width: 100% !important;
+  margin: 1.5rem 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* Target Tiptap's injected .react-renderer wrappers */
+.grid-columns-wrapper > .react-renderer,
+.grid-columns-wrapper > *,
+.wp-block-columns > .react-renderer,
+.wp-block-columns > * {
+  flex: 1 1 0% !important;
+  width: 0 !important;
+  min-width: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  box-sizing: border-box !important;
+}
+
+.tiptap-editor .ProseMirror [data-type="grid-column"],
+.tiptap-editor .tiptap [data-type="grid-column"],
+div[data-type="grid-column"],
+.wp-block-column {
+  flex: 1 1 0% !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  padding: 1.25rem !important;
+  border-radius: 0.875rem !important;
+  border: 1.5px dashed var(--border) !important;
+  background-color: var(--surface) !important;
+  box-sizing: border-box !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+/* Sidebar Left (30/70) Layout Ratio */
+.tiptap-editor .ProseMirror [data-layout="sidebar-left"] > [data-type="grid-column"]:first-child,
+.tiptap-editor .tiptap [data-layout="sidebar-left"] > [data-type="grid-column"]:first-child {
+  flex: 3 1 0% !important;
+}
+.tiptap-editor .ProseMirror [data-layout="sidebar-left"] > [data-type="grid-column"]:last-child,
+.tiptap-editor .tiptap [data-layout="sidebar-left"] > [data-type="grid-column"]:last-child {
+  flex: 7 1 0% !important;
+}
+
+/* Sidebar Right (70/30) Layout Ratio */
+.tiptap-editor .ProseMirror [data-layout="sidebar-right"] > [data-type="grid-column"]:first-child,
+.tiptap-editor .tiptap [data-layout="sidebar-right"] > [data-type="grid-column"]:first-child {
+  flex: 7 1 0% !important;
+}
+.tiptap-editor .ProseMirror [data-layout="sidebar-right"] > [data-type="grid-column"]:last-child,
+.tiptap-editor .tiptap [data-layout="sidebar-right"] > [data-type="grid-column"]:last-child {
+  flex: 3 1 0% !important;
+}
+
+/* Active Column Focus & Hover Highlighting */
+.tiptap-editor .ProseMirror [data-type="grid-column"]:hover,
+.tiptap-editor .tiptap [data-type="grid-column"]:hover {
+  border-color: var(--primary) !important;
+}
+
+.tiptap-editor .ProseMirror [data-type="grid-column"]:focus-within,
+.tiptap-editor .tiptap [data-type="grid-column"]:focus-within {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px oklch(65% 0.2 250 / 0.12) !important;
+  background-color: var(--surface) !important;
+}
+
+@media (max-width: 768px) {
+  .tiptap-editor .ProseMirror [data-type="grid-block"],
+  .tiptap-editor .tiptap [data-type="grid-block"],
+  .wp-block-columns {
+    flex-direction: column !important;
+  }
+}
+
+
+
+
+
+
+
+
+/* ══════════════════════════════════════════════════════════════════════ */
+/* HEROUI & ADMIN TABLE DESIGN SYSTEM                                      */
+/* ══════════════════════════════════════════════════════════════════════ */
+
+/* Outer Surface Container */
+[data-slot="table-root"] {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 1.25rem !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04) !important;
+  overflow: hidden !important;
+}
+
+[data-slot="table-scroll-container"] {
+  border-radius: 1.25rem !important;
+}
+
+/* Headers */
+[data-slot="table-header"] {
+  background: var(--surface-secondary) !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+
+[data-slot="table-column"] {
+  background: var(--surface-secondary) !important;
+  color: var(--muted) !important;
+  font-size: 0.6875rem !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.06em !important;
+  padding: 0.9rem 1.25rem !important;
+}
+
+/* Rows & Hover */
+[data-slot="table-row"] {
+  transition: all 0.15s ease-in-out !important;
+  border-bottom: 1px solid var(--border) !important;
+  background: var(--surface) !important;
+}
+
+[data-slot="table-row"]:last-child {
+  border-bottom: none !important;
+}
+
+[data-slot="table-row"]:hover {
+  background: var(--surface-secondary) !important;
+}
+
+/* Cells */
+[data-slot="table-cell"] {
+  padding: 1rem 1.25rem !important;
+  vertical-align: middle !important;
+  font-size: 0.8125rem !important;
+  color: var(--foreground) !important;
+}
+
 
 /* Subscript / Superscript */
 .tiptap-editor .tiptap sub { vertical-align: sub; font-size: 0.75em; }
