@@ -95,6 +95,10 @@ export default function WebsitesPage() {
     if (data && data.length > 0) {
       const merged = data.map((w: any, idx: number) => ({
         ...w,
+        name: w.name || w.websiteName || "Untitled Website",
+        domain: w.domain || "",
+        cms_type: w.cms_type || w.selectedCms || "WordPress",
+        status: (w.status || "active").toLowerCase(),
         articles: w.articles || w.total_articles_published || (120 - idx * 25),
         visitors: w.visitors || `${(30 - idx * 8).toFixed(1)}K`
       }))
@@ -145,12 +149,18 @@ export default function WebsitesPage() {
 
   const filteredAndSortedWebsites = websites
     .filter((site) => {
+      const siteName = (site.name || site.websiteName || "").toLowerCase()
+      const domainName = (site.domain || "").toLowerCase()
+      const cmsType = (site.cms_type || site.selectedCms || "").toLowerCase()
+      const query = searchQuery.toLowerCase()
+
       const matchesSearch =
-        site.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        site.domain.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        site.cms_type?.toLowerCase().includes(searchQuery.toLowerCase())
-      const matchesStatus = statusFilter === "all" || site.status === statusFilter
-      const matchesCms = cmsFilter === "all" || site.cms_type === cmsFilter
+        siteName.includes(query) ||
+        domainName.includes(query) ||
+        cmsType.includes(query)
+
+      const matchesStatus = statusFilter === "all" || (site.status || "").toLowerCase() === statusFilter.toLowerCase()
+      const matchesCms = cmsFilter === "all" || cmsType === cmsFilter.toLowerCase()
       return matchesSearch && matchesStatus && matchesCms
     })
 

@@ -77,22 +77,16 @@ export function TableRowActions({
 
       {/* 3. MORE ACTIONS BUTTON */}
       <Dropdown>
-        <Tooltip>
-          <Tooltip.Trigger>
-            <Dropdown.Trigger>
-              <Button
-                isIconOnly
-                variant="ghost"
-                size="sm"
-                aria-label="More Actions"
-                className="h-8 w-8 text-default-500 hover:text-foreground hover:bg-default-100"
-              >
-                <MoreVertical className="size-3.5" />
-              </Button>
-            </Dropdown.Trigger>
-          </Tooltip.Trigger>
-          <Tooltip.Content placement="top">More Actions</Tooltip.Content>
-        </Tooltip>
+        <Dropdown.Trigger>
+          <div
+            role="button"
+            tabIndex={0}
+            aria-label="More Actions"
+            className="inline-flex items-center justify-center h-8 w-8 rounded-medium text-default-500 hover:text-foreground hover:bg-default-100 transition-colors cursor-pointer outline-none"
+          >
+            <MoreVertical className="size-3.5" />
+          </div>
+        </Dropdown.Trigger>
 
         <Dropdown.Popover className="w-48 p-1.5 bg-content1 border border-divider rounded-2xl shadow-xl z-50">
           <ListBox aria-label={`Actions for ${name || id}`}>
